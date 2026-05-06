@@ -156,21 +156,37 @@ export function About() {
 }
 
 function PhotoSlot() {
-  // When you drop /public/portrait.jpg in, this <Image> takes over and the
-  // gradient stays as the loading background. Until then, the gradient + label
-  // fills the slot tastefully.
-  const hasPortrait = false; // flip to true once /public/portrait.jpg exists
+  // /public/portrait.jpg exists; the gradient stays as the loading background
+  // and as the visual treatment that surrounds the photo.
+  const hasPortrait = true;
   return (
     <div className="relative aspect-[4/5] overflow-hidden rounded-md border border-[--color-line] bg-[--color-bg-elev]">
       {hasPortrait ? (
-        <Image
-          src="/portrait.jpg"
-          alt="Houman Eskandani"
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover"
-          priority={false}
-        />
+        <>
+          <Image
+            src="/portrait.jpg"
+            alt="Houman Eskandani"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
+            priority={false}
+          />
+          {/* Editorial gradient: subtle violet wash + bottom darkening for legibility */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(120% 80% at 30% 20%, rgba(138,92,255,0.18) 0%, transparent 60%), linear-gradient(to top, rgba(7,7,10,0.6) 0%, transparent 35%)",
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
+            <span className="text-eyebrow text-[--color-fg]">
+              Houman Eskandani
+            </span>
+            <span className="text-eyebrow text-[--color-accent]">●</span>
+          </div>
+        </>
       ) : (
         <>
           <div
