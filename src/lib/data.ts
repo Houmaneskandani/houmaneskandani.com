@@ -5,7 +5,7 @@ export const SITE = {
   role: "Backend & Cloud Platform Engineer",
   shortRole: "Backend Engineer",
   tagline:
-    "Currently at The Vport on the VCloud GraphQL platform. Three years before that at IDEMIA shipping card personalization for Wells Fargo, Capital One, and Citi. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
+    "Currently at The Vport on the VCloud GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
   email: "eskandanihouman@gmail.com",
   location: "Irvine, CA · Remote-friendly",
   // Will host at houmaneskandani.com once DNS is pointed at Vercel.
@@ -58,80 +58,80 @@ export const PROJECTS: Project[] = [
     context:
       "When I joined, The Vport needed a backend that could host multiple tenant orgs behind a single GraphQL API without leaking data between them — and a Kubernetes footprint that a small team could actually operate, without a dedicated SRE.",
     problem:
-      "Per-route auth was inconsistent. Cross-tenant scoping lived in the application layer where it was easy to bypass. The GKE cluster had grown organically across namespaces with no clear deployment story. So I started at the auth layer and worked outward.",
+      "Auth and tenant-isolation responsibilities were spread across multiple layers, and the deployment surface had grown organically. I started at the auth layer and worked outward to consolidate guarantees in fewer places.",
     approach: [
       {
-        heading: "JWT/cookie auth with per-route allowlists",
-        body: "Every GraphQL endpoint declares its allowed user types. A middleware validates the token, attaches a request UUID for tracing, and rejects anything that doesn't match the route's allowlist before resolvers ever run.",
+        heading: "Centralized auth pipeline",
+        body: "Every endpoint declares the roles it allows. A middleware validates the token, attaches a request UUID for tracing, and rejects anything that doesn't match before resolvers ever run.",
       },
       {
-        heading: "Tenant scoping at the database layer",
-        body: "Org IDs are baked into every query through GORM scopes — applications can't accidentally read another tenant's data because the query won't compile that way.",
+        heading: "Tenant isolation at the data layer",
+        body: "Multi-tenant scoping moved out of application code and into deny-by-default scopes at the data layer — so a missed check at the call site can't leak across tenants.",
       },
       {
-        heading: "Admin flows: MFA/TOTP, email verification, password reset",
-        body: "A separate admin schema with its own RBAC (deny-by-default) keeps sensitive operations off the user-facing surface area. Twilio + SendGrid handle the side-channels.",
+        heading: "Admin authentication & lifecycle flows",
+        body: "A separate admin surface with deny-by-default RBAC keeps sensitive operations off the user-facing API. Email and SMS side-channels handle MFA, verification, and password reset.",
       },
       {
         heading: "Presigned-URL media pipeline",
-        body: "Clients upload to GCS via presigned URLs, an async worker generates thumbnails, and a recommendation engine picks up assets through a CDN-backed delivery layer.",
+        body: "Direct-to-object-storage uploads via presigned URLs, an async worker for derivative assets, and CDN-backed delivery for downstream consumers.",
       },
       {
-        heading: "Geospatial venue discovery",
-        body: "Tile38 powers radius-based search; cursor-based pagination at the DB keeps location-aware queries fast and stable as the catalog grows.",
+        heading: "Geospatial discovery",
+        body: "Radius-based search backed by Tile38, with cursor-based DB pagination so location-aware queries stay fast and stable as the catalog grows.",
       },
       {
         heading: "Observability you can actually use",
-        body: "A Prometheus exporter exposes GraphQL-aware metrics on /metrics. Structured logs carry the request UUID and user context, so a single request is traceable end-to-end.",
+        body: "A Prometheus exporter exposes GraphQL-aware metrics. Structured logs carry the request UUID and user context, so a single request is traceable end-to-end.",
       },
     ],
     outcome:
-      "A platform that scales horizontally on GKE, a security model with no known cross-tenant edges, and dashboards the team actually trusts for routine ops.",
+      "A platform that scales horizontally on Kubernetes, a consolidated security model, and dashboards the team trusts for routine ops.",
     metrics: [
-      { value: "0", label: "cross-tenant leak paths" },
-      { value: "6", label: "GKE namespaces operated" },
-      { value: "100%", label: "endpoints behind RBAC" },
+      { value: "Centralized", label: "auth pipeline" },
+      { value: "Multi-tenant", label: "isolation guarantees" },
+      { value: "End-to-end", label: "request tracing" },
     ],
   },
   {
     id: "02",
     slug: "card-personalization-platform",
     title: "Card personalization platform",
-    client: "IDEMIA · Wells Fargo, Capital One, Citi",
+    client: "IDEMIA",
     year: "2022 — 2025",
     role: "Software Engineer II",
     tags: ["Java", "SQL", "PCI-DSS", "Linux"],
     summary:
-      "High-security card issuance handling 1M+ secure card transactions a day for top-tier U.S. financial institutions.",
+      "High-security card issuance at bank scale, under PCI-DSS, for tier-1 U.S. financial institutions.",
     accent: "#8a5cff",
     context:
-      "IDEMIA's card personalization platform issues physical cards for some of the largest U.S. banks. PCI-DSS compliance is the floor; zero tolerance for data defects in production is the bar. I spent three years there, mostly on the backend that turns a customer record into a card a real person uses.",
+      "IDEMIA's card personalization platform issues physical cards for some of the largest U.S. banks. PCI-DSS compliance is the floor; zero tolerance for data defects in production is the bar. I spent three years there on the backend that turns a customer record into a card a real person uses.",
     problem:
-      "At a million transactions a day, edge-case data defects, layout regressions, and SLA-bound incidents come with the territory. Every change has to be backward-compatible with live client workflows — you can't break a card program that's been issuing for five years.",
+      "At bank scale, edge-case data defects, layout regressions, and SLA-bound incidents come with the territory. Every change has to be backward-compatible with live programs — you can't break a card program that's been issuing for years.",
     approach: [
       {
-        heading: "Secure PIN generation & mailing flows",
-        body: "PIN generation and downstream mailing flows built to the bar of PCI-DSS and the banks' internal security requirements — reducing compliance risk on the client side and standardizing how new programs onboard.",
+        heading: "Secure issuance pipelines under PCI-DSS",
+        body: "Built and maintained sensitive issuance pipelines to PCI-DSS bars and partner-specific security requirements — reducing compliance risk on the client side and standardizing how new programs onboard.",
       },
       {
-        heading: "Critical incident response, under SLA",
-        body: "Resolved 20+ critical production incidents under strict client SLAs by pinpointing logic and data defects fast — often using ad-hoc SQL across 1M+ row datasets to do root-cause analysis the same shift.",
+        heading: "Critical incident response under SLA",
+        body: "Resolved critical production incidents under strict SLAs by pinpointing logic and data defects fast — root-cause analysis across large datasets, same shift.",
       },
       {
         heading: "Custom card layouts without breaking history",
-        body: "Built backend support for custom card layouts (vertical PAN, barcodes) with full backward compatibility — production for older client programs continued unchanged while new programs got the new features.",
+        body: "Backward-compatible backend additions for new layout features — older programs continued unchanged while new ones picked up the new options on opt-in.",
       },
       {
         heading: "Production discipline",
-        body: "Daily standups, client reviews, QA coordination, and 5S production-floor auditing as a volunteer — the operational side of running a financial-services backend that can't go down.",
+        body: "Daily standups, partner reviews, QA coordination, and 5S production-floor auditing as a volunteer — the operational side of running a high-availability backend that can't go down.",
       },
     ],
     outcome:
       "Three years on a platform where mistakes are extremely expensive — and none of mine made it to a customer.",
     metrics: [
-      { value: "1M+", label: "secure transactions / day" },
-      { value: "20+", label: "P0 incidents resolved" },
-      { value: "3", label: "tier-1 banks supported" },
+      { value: "PCI-DSS", label: "compliance bar" },
+      { value: "Same-shift", label: "RCAs at scale" },
+      { value: "Tier-1", label: "banking clients" },
     ],
   },
   {

@@ -62,8 +62,8 @@ export function About() {
                   high-security, multi-tenant APIs — most of that time at
                   IDEMIA, on the card-issuance platform that ships secure
                   card transactions at bank scale for{" "}
-                  <span className="text-[--color-fg]">Wells Fargo, Capital
-                  One, and Citi</span>.
+                  <span className="text-[--color-fg]">tier-1 U.S. financial
+                  institutions</span>.
                 </p>
               </Reveal>
               <Reveal delay={0.07} className="mt-5">
@@ -105,9 +105,9 @@ export function About() {
             <ul className="grid grid-cols-2 gap-y-6 border-t border-[--color-line] pt-8 md:grid-cols-4">
               {[
                 ["5+", "yrs in backend"],
-                ["1M+", "tx / day shipped"],
-                ["3", "tier-1 banks supported"],
-                ["6", "GKE namespaces operated"],
+                ["Bank-scale", "card issuance"],
+                ["Tier-1", "banking clients"],
+                ["Multi-tenant", "GraphQL platform"],
               ].map(([n, label]) => (
                 <li key={label}>
                   <p className="text-display text-3xl md:text-5xl">{n}</p>

@@ -95,7 +95,7 @@ export default async function Image() {
           }}
         >
           <div>
-            Go · GraphQL · Postgres · Kubernetes · 1M+ daily transactions
+            Go · GraphQL · Postgres · Kubernetes · AI agents
           </div>
           <div>↗</div>
         </div>
