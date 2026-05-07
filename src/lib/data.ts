@@ -257,8 +257,35 @@ export const CAPABILITIES: Capability[] = [
 export const NAV = [
   { label: "Work", href: "/#work" },
   { label: "About", href: "/#about" },
-  { label: "Lab", href: "/lab" },
+  { label: "Side projects", href: "/lab" },
   { label: "Contact", href: "/#contact" },
+];
+
+export type SideProject = {
+  id: string;
+  name: string;
+  tag: string;
+  description: string;
+  /** Internal case-study link, if one exists. */
+  href?: string;
+  /** External repo / live URL. */
+  external?: string;
+  status?: string;
+};
+
+// Things built outside paid work. Honest list — only ship what's real.
+// More can be added here as projects mature.
+export const SIDE_PROJECTS: SideProject[] = [
+  {
+    id: "01",
+    name: "ApplyAgent",
+    tag: "AI · Python · Claude API · Playwright",
+    description:
+      "Autonomous agent that fills out and submits real job applications by reasoning over live DOM with Claude and Playwright. Multi-source ATS scraper (Greenhouse, Lever) + profile-aware job scorer ranks 2,000+ listings.",
+    href: "/work/applyagent",
+    external: "https://github.com/Houmaneskandani/ApplyAgent",
+    status: "Active",
+  },
 ];
 
 export type Experience = {
