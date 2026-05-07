@@ -19,7 +19,7 @@ const personJsonLd = {
   description:
     "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Currently at The Vport on the VCloud GraphQL platform; previously at IDEMIA on a card-personalization platform serving tier-1 U.S. banks.",
   email: `mailto:${SITE.email}`,
-  image: `${SITE.url}/portrait.jpg`,
+  image: `${SITE.url}/portrait.png`,
   sameAs: [SITE.social.github, SITE.social.linkedin],
   knowsAbout: [
     "Backend Development",

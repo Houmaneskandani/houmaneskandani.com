@@ -49,7 +49,7 @@ export function About() {
           </h2>
 
           <div className="mt-16 grid grid-cols-12 gap-x-6 gap-y-8">
-            {/* Photo slot — drop your portrait into /public/portrait.jpg
+            {/* Photo slot — drop your portrait into /public/portrait.png
                 and it will replace this gradient placeholder automatically. */}
             <Reveal className="col-span-12 md:col-span-4">
               <PhotoSlot />
@@ -172,7 +172,7 @@ export function About() {
 }
 
 function PhotoSlot() {
-  // /public/portrait.jpg exists; the gradient stays as the loading background
+  // /public/portrait.png exists; the gradient stays as the loading background
   // and as the visual treatment that surrounds the photo.
   const hasPortrait = true;
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -196,7 +196,7 @@ function PhotoSlot() {
             className="absolute inset-0 transition-[filter] duration-700 [filter:saturate(0.85)_contrast(1.05)] group-hover:[filter:saturate(1)_contrast(1)]"
           >
             <Image
-              src="/portrait.jpg"
+              src="/portrait.png"
               alt="Houman Eskandani"
               fill
               sizes="(max-width: 768px) 100vw, 33vw"
@@ -233,7 +233,7 @@ function PhotoSlot() {
           <div className="absolute inset-0 flex flex-col items-start justify-end p-5">
             <span className="text-eyebrow">Portrait · TBD</span>
             <span className="mt-2 text-xs text-[--color-muted]">
-              Drop a photo at /public/portrait.jpg
+              Drop a photo at /public/portrait.png
             </span>
           </div>
         </>
