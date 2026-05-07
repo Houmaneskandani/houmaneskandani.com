@@ -111,6 +111,7 @@ const vertexShader = /* glsl */ `
 
 const fragmentShader = /* glsl */ `
   uniform float uTime;
+  uniform float uOpacity;
   uniform vec3 uColorA;
   uniform vec3 uColorB;
   uniform vec3 uColorC;
@@ -124,22 +125,23 @@ const fragmentShader = /* glsl */ `
     vec3 col = mix(uColorA, uColorB, band);
     col = mix(col, uColorC, fres);
     col += fres * 0.6;
-    // gentle radial vignette around center
     float r = length(vPos.xy) * 0.18;
     col *= 1.0 - r * 0.3;
-    gl_FragColor = vec4(col, 1.0);
+    gl_FragColor = vec4(col, uOpacity);
   }
 `;
 
 function Blob() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useRef(new THREE.Vector2(0, 0));
+  const targetPos = useRef(new THREE.Vector3());
 
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uDistortion: { value: 0.55 },
       uRipple: { value: 0.18 },
+      uOpacity: { value: 1 },
       uMouse: { value: new THREE.Vector2(0, 0) },
       uColorA: { value: new THREE.Color("#0a0a12") },
       uColorB: { value: new THREE.Color("#8a5cff") },
@@ -162,10 +164,38 @@ function Blob() {
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, 0.06);
-    // Scroll-driven camera dolly: pull back as you scroll into the page.
+
+    // Drop progress: 0 at top of page, 1 once scrolled past one viewport.
+    // Eased so the transition feels weighty rather than linear.
     const sy = typeof window !== "undefined" ? window.scrollY : 0;
-    const targetZ = 3.6 + Math.min(sy / 800, 1) * 1.2;
-    state.camera.position.z += (targetZ - state.camera.position.z) * 0.08;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+    const raw = Math.min(Math.max(sy / vh, 0), 1);
+    const p = raw * raw * (3 - 2 * raw); // smoothstep
+
+    // Project the viewport-relative parking spot into world space using the
+    // active camera. Recomputing every frame keeps the corner anchored on
+    // resize without a separate listener.
+    const cam = state.camera as THREE.PerspectiveCamera;
+    const fovRad = (cam.fov * Math.PI) / 180;
+    const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
+    const visibleW = visibleH * cam.aspect;
+    const margin = 0.95;
+    const parkX = visibleW / 2 - margin;
+    const parkY = visibleH / 2 - margin;
+
+    const targetX = parkX * p;
+    const targetY = parkY * p;
+    const targetScale = 1 - p * 0.6;
+    const targetOpacity = 1 - p * 0.55;
+
+    targetPos.current.set(targetX, targetY, 0);
+    mesh.current.position.lerp(targetPos.current, 0.08);
+    const cs = mesh.current.scale.x;
+    const ns = cs + (targetScale - cs) * 0.08;
+    mesh.current.scale.setScalar(ns);
+    m.uniforms.uOpacity.value +=
+      (targetOpacity - m.uniforms.uOpacity.value) * 0.08;
+
     mesh.current.rotation.y += delta * 0.06;
     mesh.current.rotation.x += delta * 0.02;
   });
@@ -177,6 +207,7 @@ function Blob() {
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
         uniforms={uniforms}
+        transparent
       />
     </mesh>
   );
@@ -205,6 +236,15 @@ function Particles({ count = 600 }: { count?: number }) {
     ref.current.rotation.y += delta * 0.04;
     ref.current.rotation.x =
       Math.sin(state.clock.elapsedTime * 0.2) * 0.2;
+
+    // Particles only really sell the hero halo; once the blob parks in the
+    // corner they'd just be loose dots floating around it. Fade out fast.
+    const sy = typeof window !== "undefined" ? window.scrollY : 0;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+    const raw = Math.min(Math.max(sy / (vh * 0.6), 0), 1);
+    const target = 0.55 * (1 - raw);
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.opacity += (target - mat.opacity) * 0.1;
   });
 
   return (
