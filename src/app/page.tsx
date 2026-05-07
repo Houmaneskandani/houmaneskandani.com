@@ -6,6 +6,7 @@ import { Capabilities } from "@/components/sections/Capabilities";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
 import { PersistentDrop } from "@/components/three/PersistentDrop";
+import { RibbonOverlay } from "@/components/three/RibbonOverlay";
 
 export default function HomePage() {
   return (
@@ -20,6 +21,7 @@ export default function HomePage() {
         <Contact />
         <Footer />
       </main>
+      <RibbonOverlay />
     </>
   );
 }
