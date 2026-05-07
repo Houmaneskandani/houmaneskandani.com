@@ -286,13 +286,14 @@ function HeroBlob() {
 
     const p = readDropProgress();
 
-    // Phase 1 — pinch (0..0.18): hero builds tension as if surface tension
-    // is bunching up before releasing the droplet. Returns to neutral by 0.18.
-    const pinch = Math.sin(smoothstep(0, 0.18, p) * Math.PI) * 0.07;
+    // Phase 1 — pinch (0..0.15): hero builds tension as if surface tension
+    // is bunching up before releasing the droplet.
+    const pinch = Math.sin(smoothstep(0, 0.15, p) * Math.PI) * 0.07;
 
-    // Phase 2 — collapse (0.10..0.55): hero scale & opacity ease to 0 as the
-    // droplet has now pinched off and is travelling.
-    const fade = smoothstep(0.1, 0.55, p);
+    // Phase 2 — fast collapse (0.15..0.32): once the droplet has pinched
+    // off, the hero rapidly contracts to nothing so there's never a moment
+    // where the user sees a half-hero next to a fully-formed droplet.
+    const fade = smoothstep(0.15, 0.32, p);
     const targetScale = 1 - fade;
     const targetOpacity = 1 - fade;
 
@@ -469,13 +470,17 @@ function Droplet() {
         ? document.documentElement.scrollHeight
         : vh;
 
-    const emerge = smoothstep(0.08, 0.22, p);
+    // Droplet emerges later so it doesn't co-exist with a still-visible hero.
+    // Sequence: hero pinches → droplet emerges (hero collapsing) → droplet
+    // travels (hero gone). At any single moment there's only one prominent
+    // shape on screen.
+    const emerge = smoothstep(0.18, 0.30, p);
 
     // ─── Phase A — pinch off the hero and arc into the top-right corner.
     const cornerMargin = 0.85;
     const parkXworld = visibleW / 2 - cornerMargin;
     const parkYworld = visibleH / 2 - cornerMargin;
-    const travel = smoothstep(0.1, 0.85, p);
+    const travel = smoothstep(0.28, 0.85, p);
     const arcCx = parkXworld * 0.35;
     const arcCy = parkYworld * 2.4;
     const omt = 1 - travel;
@@ -706,16 +711,21 @@ export function HeroScene() {
             blob's silhouette. Tuned soft so it reads as cinematic glow,
             not a screen-space FX showcase. */}
         <EffectComposer multisampling={0}>
+          {/* Bloom: only the brightest highlights bleed, narrow radius. The
+              previous tuning (threshold 0.25, intensity 0.55) made the lime
+              accent burn out into a fake-looking yellow halo around the blob.
+              Tightened so the glow reads as a subtle inner light, not a glow
+              effect plastered on top. */}
           <Bloom
             mipmapBlur
-            intensity={0.55}
-            luminanceThreshold={0.25}
-            luminanceSmoothing={0.6}
-            radius={0.85}
+            intensity={0.28}
+            luminanceThreshold={0.7}
+            luminanceSmoothing={0.4}
+            radius={0.55}
           />
           <ChromaticAberration
             blendFunction={BlendFunction.NORMAL}
-            offset={new Vector2(0.0009, 0.0014)}
+            offset={new Vector2(0.0006, 0.0009)}
             radialModulation={false}
             modulationOffset={0}
           />
