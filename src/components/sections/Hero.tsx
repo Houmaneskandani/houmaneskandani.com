@@ -1,29 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { SITE } from "@/lib/data";
 import { SplitText } from "@/components/ui/SplitText";
-
-// Static gradient that fills the hero area while the WebGL chunk loads —
-// avoids a black flash and gives the section a stable LCP background.
-function HeroChunkFallback() {
-  return (
-    <div
-      aria-hidden
-      className="absolute inset-0"
-      style={{
-        background:
-          "radial-gradient(60% 60% at 50% 45%, rgba(138,92,255,0.45) 0%, transparent 60%), radial-gradient(40% 40% at 70% 65%, rgba(200,255,0,0.25) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
-      }}
-    />
-  );
-}
-
-const HeroScene = dynamic(
-  () => import("@/components/three/HeroScene").then((m) => m.HeroScene),
-  { ssr: false, loading: () => <HeroChunkFallback /> },
-);
 
 export function Hero() {
   return (
@@ -31,9 +10,17 @@ export function Hero() {
       id="top"
       className="relative isolate flex min-h-[100svh] w-full flex-col justify-end overflow-hidden px-6 pb-12 pt-32 md:px-10"
     >
-      <div className="absolute inset-0 -z-10">
-        <HeroScene />
-      </div>
+      {/* Mobile-only static backdrop. On desktop the persistent WebGL drop
+          renders behind the page; mobiles skip it for battery / perf, so the
+          hero needs its own painted gradient at small breakpoints. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 md:hidden"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 50% 45%, rgba(138,92,255,0.45) 0%, transparent 60%), radial-gradient(40% 40% at 70% 65%, rgba(200,255,0,0.25) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
+        }}
+      />
 
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[--color-bg]" />
 

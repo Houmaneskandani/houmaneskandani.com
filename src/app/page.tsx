@@ -5,17 +5,21 @@ import { Work } from "@/components/sections/Work";
 import { Capabilities } from "@/components/sections/Capabilities";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
+import { PersistentDrop } from "@/components/three/PersistentDrop";
 
 export default function HomePage() {
   return (
-    <main className="relative">
-      <Navbar />
-      <Hero />
-      <About />
-      <Work />
-      <Capabilities />
-      <Contact />
-      <Footer />
-    </main>
+    <>
+      <PersistentDrop />
+      <main className="relative z-10">
+        <Navbar />
+        <Hero />
+        <About />
+        <Work />
+        <Capabilities />
+        <Contact />
+        <Footer />
+      </main>
+    </>
   );
 }
