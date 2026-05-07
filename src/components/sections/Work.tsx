@@ -1,60 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { PROJECTS, type Project } from "@/lib/data";
 import { Reveal } from "@/components/ui/Reveal";
 import { SplitText } from "@/components/ui/SplitText";
 
-const ProjectHero = dynamic(
-  () => import("@/components/three/ProjectHero").then((m) => m.ProjectHero),
-  { ssr: false },
-);
-
-// Preview card dimensions — kept in sync with the className below so we can
-// position the card via inline left/top without relying on a CSS translate
-// (framer-motion's animated transform would override Tailwind's translate
-// utilities and leave the card off-screen).
-const PREVIEW_W = 448; // tailwind w-[28rem]
-const PREVIEW_H = 320; // tailwind h-80
-
 export function Work() {
   const [hovered, setHovered] = useState<Project | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  const cursor = useRef({ x: 0, y: 0 });
 
-  // Position the card under the cursor without using CSS translate (which
-  // framer-motion overwrites once the entrance animation settles). We track
-  // the cursor at the document level so the card has a valid position the
-  // moment it mounts — no flash off-screen on first hover.
-  const place = (x: number, y: number) => {
+  const onMove = (e: React.MouseEvent) => {
     const el = previewRef.current;
     if (!el) return;
-    el.style.left = `${x - PREVIEW_W / 2}px`;
-    el.style.top = `${y - PREVIEW_H / 2}px`;
+    el.style.left = `${e.clientX}px`;
+    el.style.top = `${e.clientY}px`;
   };
-
-  useEffect(() => {
-    const onDocMove = (e: MouseEvent) => {
-      cursor.current.x = e.clientX;
-      cursor.current.y = e.clientY;
-      if (hovered) place(e.clientX, e.clientY);
-    };
-    window.addEventListener("mousemove", onDocMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onDocMove);
-  }, [hovered]);
-
-  // When a row activates, snap the card to the last known cursor position so
-  // it appears in the right place even before the next mousemove fires.
-  useEffect(() => {
-    if (hovered) place(cursor.current.x, cursor.current.y);
-  }, [hovered]);
 
   return (
     <section
       id="work"
+      onMouseMove={onMove}
       className="relative w-full px-6 py-32 md:px-10 md:py-48"
     >
       <div className="mx-auto w-full max-w-[1400px]">
@@ -127,41 +94,26 @@ export function Work() {
         {hovered ? (
           <motion.div
             ref={previewRef}
-            initial={{ opacity: 0, scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none fixed z-30 hidden h-80 w-[28rem] overflow-hidden rounded-xl md:block"
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-none fixed z-30 hidden h-72 w-96 -translate-x-1/2 -translate-y-1/2 rounded-xl p-8 md:block"
             style={{
-              border: `1px solid ${hovered.accent}55`,
-              boxShadow: `0 30px 80px -20px ${hovered.accent}40`,
+              background: `radial-gradient(circle at 30% 20%, ${hovered.accent}40 0%, transparent 60%), linear-gradient(135deg, #0d0d12 0%, #1a1a22 100%)`,
+              border: `1px solid ${hovered.accent}40`,
+              boxShadow: `0 30px 80px -20px ${hovered.accent}30`,
             }}
           >
-            {/* Per-project shader scene, tinted by accent. Remounts per row
-                so the shader picks up the new accent color cleanly. */}
-            <div className="absolute inset-0">
-              <ProjectHero key={hovered.id} accent={hovered.accent} />
-            </div>
-            {/* Bottom-fade for legibility */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(7,7,10,0.85) 0%, rgba(7,7,10,0.25) 35%, transparent 65%)",
-              }}
-            />
-            <div className="relative flex h-full flex-col justify-end p-6">
-              <p className="text-eyebrow" style={{ color: hovered.accent }}>
-                {hovered.id} · {hovered.year}
-              </p>
-              <p className="mt-2 text-display text-2xl leading-tight">
-                {hovered.title}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-[--color-muted]">
-                {hovered.summary}
-              </p>
-            </div>
+            <p className="text-eyebrow" style={{ color: hovered.accent }}>
+              {hovered.id}
+            </p>
+            <p className="mt-3 text-display text-2xl leading-tight">
+              {hovered.title}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-[--color-muted]">
+              {hovered.summary}
+            </p>
           </motion.div>
         ) : null}
       </AnimatePresence>
