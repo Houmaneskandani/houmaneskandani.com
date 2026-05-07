@@ -5,9 +5,24 @@ import { motion } from "framer-motion";
 import { SITE } from "@/lib/data";
 import { SplitText } from "@/components/ui/SplitText";
 
+// Static gradient that fills the hero area while the WebGL chunk loads —
+// avoids a black flash and gives the section a stable LCP background.
+function HeroChunkFallback() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(60% 60% at 50% 45%, rgba(138,92,255,0.45) 0%, transparent 60%), radial-gradient(40% 40% at 70% 65%, rgba(200,255,0,0.25) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
+      }}
+    />
+  );
+}
+
 const HeroScene = dynamic(
   () => import("@/components/three/HeroScene").then((m) => m.HeroScene),
-  { ssr: false },
+  { ssr: false, loading: () => <HeroChunkFallback /> },
 );
 
 export function Hero() {
@@ -36,17 +51,33 @@ export function Hero() {
           transition={{ duration: 1.5, delay: 0.2 }}
           className="text-display text-[14vw] leading-[0.86] md:text-[10.5vw]"
         >
-          <SplitText text="Backends that hold." className="block" delay={0.1} />
-          <SplitText
-            text="APIs that don't lie."
-            className="block text-[--color-accent]"
-            delay={0.25}
-          />
-          <SplitText
-            text="Platforms that sleep."
-            className="block opacity-80"
-            delay={0.4}
-          />
+          {/* Keyword-rich accessible name for the h1. Screen readers and search
+              engines see this; users see the display copy below. */}
+          <span className="sr-only">
+            Houman Eskandani — Backend &amp; Cloud Platform Engineer.
+            Building high-security, multi-tenant APIs and cloud platforms in
+            Go, GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently
+            shipping the VCloud GraphQL platform at The Vport; previously at
+            IDEMIA on card personalization for Wells Fargo, Capital One, and
+            Citi.
+          </span>
+          <span aria-hidden>
+            <SplitText
+              text="Backends that hold."
+              className="block"
+              delay={0.1}
+            />
+            <SplitText
+              text="APIs that don't lie."
+              className="block text-[--color-accent]"
+              delay={0.25}
+            />
+            <SplitText
+              text="Platforms that sleep."
+              className="block opacity-80"
+              delay={0.4}
+            />
+          </span>
         </motion.h1>
 
         <div className="mt-10 grid grid-cols-12 gap-x-6 gap-y-6">
