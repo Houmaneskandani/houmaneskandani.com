@@ -225,6 +225,72 @@ function eggIntensity(): number {
   return Math.max(0, 1 - sec / 2.5);
 }
 
+/**
+ * Long-press nova. Hold the pointer down for ≥2s while in the hero scroll
+ * zone → the hero blob explodes outward to fill the viewport with chaotic
+ * boiling distortion, holds for a beat, then reforms over a total ~4s arc.
+ *
+ * `pressStart` is non-zero only while the pointer is down. `novaStart` is
+ * non-zero only while a nova is currently animating. Module-level so the
+ * HeroBlob/Droplet can both read it without prop drilling or context.
+ */
+const NOVA_HOLD_MS = 2000;
+const NOVA_DURATION_MS = 4000;
+const novaState = { pressStart: 0, novaStart: 0 };
+
+function useNovaPress() {
+  useEffect(() => {
+    const onDown = () => {
+      // Only arm during hero scroll. Outside hero a long-press is just a
+      // regular gesture (scrolling, etc.) and shouldn't trigger.
+      const sy = window.scrollY;
+      const vh = window.innerHeight;
+      if (sy < vh * 0.65 && !novaState.novaStart) {
+        novaState.pressStart = performance.now();
+      }
+    };
+    const onUp = () => {
+      novaState.pressStart = 0;
+    };
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("blur", onUp);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", onUp);
+    };
+  }, []);
+}
+
+/**
+ * Returns the build-up [0..1] while pressing toward the trigger threshold,
+ * and the active nova progress [0..1] over its full duration. -1 for nova
+ * progress means no nova active. Side-effects this fn:
+ *   - fires the nova when the press hold reaches the threshold
+ *   - clears state when the nova arc completes
+ */
+function getNovaProgress(now: number): { press: number; nova: number } {
+  if (novaState.pressStart && !novaState.novaStart) {
+    if (now - novaState.pressStart >= NOVA_HOLD_MS) {
+      novaState.novaStart = now;
+      novaState.pressStart = 0;
+    }
+  }
+  if (novaState.novaStart && now - novaState.novaStart > NOVA_DURATION_MS) {
+    novaState.novaStart = 0;
+  }
+  const press = novaState.pressStart
+    ? Math.min(1, (now - novaState.pressStart) / NOVA_HOLD_MS)
+    : 0;
+  const nova = novaState.novaStart
+    ? (now - novaState.novaStart) / NOVA_DURATION_MS
+    : -1;
+  return { press, nova };
+}
+
 function useSharedMouse() {
   const mouse = useRef(new THREE.Vector2(0, 0));
   useEffect(() => {
@@ -267,6 +333,7 @@ function HeroBlob() {
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
   useClickShock(mesh);
   useEasterEgg();
+  useNovaPress();
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -305,8 +372,63 @@ function HeroBlob() {
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * k;
 
-    mesh.current.rotation.y += delta * 0.06;
-    mesh.current.rotation.x += delta * 0.02;
+    // ─── Long-press nova. Build-up while holding (subtle distortion + scale
+    // pulse so the user knows something is charging). When the hold reaches
+    // 2s, the nova fires: blob explodes outward to fill the viewport with
+    // chaotic boil, then reforms over ~4 seconds.
+    const { press, nova } = getNovaProgress(performance.now());
+
+    if (press > 0) {
+      // Charging: subtle bump in distortion + slight scale grow + faster
+      // boil (extra rotation). Never quite as big as the nova itself.
+      m.uniforms.uDistortion.value += press * 0.45;
+      const chargeScale = 1 + press * 0.18;
+      mesh.current.scale.multiplyScalar(chargeScale);
+      // Push the click-shock uniform up too so the surface gets jittery —
+      // visual feedback that something is happening.
+      m.uniforms.uClickStrength.value = Math.max(
+        m.uniforms.uClickStrength.value,
+        press * 0.7,
+      );
+    }
+
+    if (nova >= 0) {
+      // Three-phase nova arc. Numbers picked so the explosion lands fast
+      // (~600ms), holds dispersed for ~1.6s, then reforms over ~1.8s.
+      let novaScale = 1;
+      let novaDist = 0;
+      let novaOpacity = 1;
+      if (nova < 0.15) {
+        const t = nova / 0.15;
+        novaScale = 1 + t * 4.5; // 1 → 5.5
+        novaDist = t * 2.0;
+        novaOpacity = 1;
+      } else if (nova < 0.55) {
+        const t = (nova - 0.15) / 0.4;
+        novaScale = 5.5 + t * 1.5; // 5.5 → 7
+        novaDist = 2.0 - t * 1.0; // 2.0 → 1.0
+        novaOpacity = 1 - t * 0.4; // 1 → 0.6
+      } else {
+        const t = (nova - 0.55) / 0.45;
+        const eased = t * t * (3 - 2 * t);
+        novaScale = 7 - eased * 6; // 7 → 1
+        novaDist = 1.0 - eased * 1.0; // 1 → 0
+        novaOpacity = 0.6 + eased * 0.4; // 0.6 → 1
+      }
+      mesh.current.scale.multiplyScalar(novaScale);
+      m.uniforms.uDistortion.value += novaDist;
+      m.uniforms.uOpacity.value *= novaOpacity;
+      // Fast spin during the nova for chaos energy.
+      m.uniforms.uClickStrength.value = Math.max(
+        m.uniforms.uClickStrength.value,
+        novaScale > 3 ? 1 : 0,
+      );
+      mesh.current.rotation.y += delta * (0.06 + novaDist * 0.6);
+      mesh.current.rotation.x += delta * (0.02 + novaDist * 0.4);
+    } else {
+      mesh.current.rotation.y += delta * 0.06;
+      mesh.current.rotation.x += delta * 0.02;
+    }
   });
 
   return (
