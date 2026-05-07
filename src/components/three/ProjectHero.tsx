@@ -3,6 +3,19 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef, useEffect, useState, Suspense } from "react";
 import * as THREE from "three";
+import { usePrefersReducedMotion } from "@/lib/hooks";
+
+function StaticProjectFallback({ accent }: { accent: string }) {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background: `radial-gradient(50% 50% at 30% 30%, ${accent}55 0%, transparent 60%), radial-gradient(40% 40% at 75% 70%, rgba(138,92,255,0.3) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)`,
+      }}
+    />
+  );
+}
 
 const vert = /* glsl */ `
   varying vec2 vUv;
@@ -111,8 +124,10 @@ function Plane({ accent }: { accent: string }) {
 
 export function ProjectHero({ accent }: { accent: string }) {
   const [mounted, setMounted] = useState(false);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+  if (reduced) return <StaticProjectFallback accent={accent} />;
 
   return (
     <Canvas
@@ -120,6 +135,7 @@ export function ProjectHero({ accent }: { accent: string }) {
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 1], zoom: 1 }}
       gl={{ antialias: false, powerPreference: "high-performance" }}
+      fallback={<StaticProjectFallback accent={accent} />}
     >
       <Suspense fallback={null}>
         <Plane accent={accent} />

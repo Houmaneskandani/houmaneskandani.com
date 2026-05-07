@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "@/lib/hooks";
 
 type Props = {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ type Props = {
 export function Reveal({ children, delay = 0, y = 30, className }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
@@ -36,6 +38,14 @@ export function Reveal({ children, delay = 0, y = 30, className }: Props) {
     io.observe(el);
     return () => io.disconnect();
   }, []);
+
+  if (reduced) {
+    return (
+      <div ref={ref} className={className}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div

@@ -12,7 +12,10 @@ export function CustomCursor() {
     if (typeof window === "undefined") return;
     const fine =
       window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    if (!fine) return;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (!fine || reduced) return;
     setEnabled(true);
     document.body.classList.add("cursor-active");
 

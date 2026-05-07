@@ -10,6 +10,9 @@ import { FluidTrail } from "@/components/three/FluidTrail";
 const ShaderGrid = dynamic(
   () => import("@/components/three/ShaderGrid").then((m) => m.ShaderGrid),
 );
+const WarpField = dynamic(
+  () => import("@/components/three/WarpField").then((m) => m.WarpField),
+);
 
 export const metadata: Metadata = {
   title: "Lab — Houman Eskandani",
@@ -34,10 +37,10 @@ const EXPERIMENTS = [
   },
   {
     id: "03",
-    name: "Coming soon",
+    name: "Warp lattice",
     detail:
-      "GPGPU curl-noise particle field with cursor attractors. In progress.",
-    tag: "WebGL · GPGPU",
+      "Procedural grid bent radially around the cursor, with a chromatic-fringe edge tint and a violet halo glow.",
+    tag: "WebGL · Shader",
   },
 ];
 
@@ -103,7 +106,7 @@ export default function LabPage() {
                     ) : i === 1 ? (
                       <FluidTrail />
                     ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-[--color-bg-elev] via-[#11111a] to-[--color-bg]" />
+                      <WarpField />
                     )}
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-[--color-bg]/95 via-[--color-bg]/30 to-transparent" />
@@ -130,7 +133,7 @@ export default function LabPage() {
 
       <section className="relative w-full px-6 pb-24 md:px-10 md:pb-40">
         <div className="mx-auto flex w-full max-w-[1400px] items-end justify-between border-t border-[--color-line] pt-10">
-          <p className="text-eyebrow">More on the way · Q3 2026</p>
+          <p className="text-eyebrow">More on the way</p>
           <Link
             href="/"
             data-cursor="HOME"

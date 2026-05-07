@@ -2,9 +2,12 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { usePrefersReducedMotion } from "@/lib/hooks";
 
 export function SmoothScroll({ children }: { children: React.ReactNode }) {
+  const reduced = usePrefersReducedMotion();
   useEffect(() => {
+    if (reduced) return; // honor OS preference; native scroll only
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => 1 - Math.pow(1 - t, 4),
@@ -50,7 +53,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       lenis.destroy();
       document.documentElement.classList.remove("lenis", "lenis-smooth");
     };
-  }, []);
+  }, [reduced]);
 
   return <>{children}</>;
 }

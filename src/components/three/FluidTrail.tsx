@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
  * 2D canvas fluid-trail. Lightweight cousin of WebGL fluid sims.
@@ -9,8 +10,10 @@ import { useEffect, useRef } from "react";
  */
 export function FluidTrail({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
+    if (reduced) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: true });
@@ -103,7 +106,22 @@ export function FluidTrail({ className }: { className?: string }) {
       window.removeEventListener("resize", resize);
       canvas.removeEventListener("pointermove", onMove);
     };
-  }, []);
+  }, [reduced]);
+
+  if (reduced) {
+    return (
+      <div
+        aria-hidden
+        className={className}
+        style={{
+          width: "100%",
+          height: "100%",
+          background:
+            "radial-gradient(60% 60% at 30% 30%, rgba(138,92,255,0.35) 0%, transparent 60%), radial-gradient(40% 40% at 75% 70%, rgba(200,255,0,0.18) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
+        }}
+      />
+    );
+  }
 
   return (
     <canvas
