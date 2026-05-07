@@ -17,7 +17,7 @@ const personJsonLd = {
   url: SITE.url,
   jobTitle: SITE.role,
   description:
-    "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Currently at The Vport on the VCloud GraphQL platform; previously at IDEMIA on card personalization for Wells Fargo, Capital One, and Citi.",
+    "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Currently at The Vport on the VCloud GraphQL platform; previously at IDEMIA on a card-personalization platform serving tier-1 U.S. banks.",
   email: `mailto:${SITE.email}`,
   image: `${SITE.url}/portrait.jpg`,
   sameAs: [SITE.social.github, SITE.social.linkedin],

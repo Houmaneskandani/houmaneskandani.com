@@ -60,8 +60,8 @@ export function Hero() {
             Building high-security, multi-tenant APIs and cloud platforms in
             Go, GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently
             shipping the VCloud GraphQL platform at The Vport; previously at
-            IDEMIA on card personalization for Wells Fargo, Capital One, and
-            Citi.
+            IDEMIA on a card-personalization platform serving tier-1 U.S.
+            banks.
           </span>
           <span aria-hidden>
             <SplitText
