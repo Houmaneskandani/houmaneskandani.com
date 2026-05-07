@@ -231,8 +231,33 @@ function Particles({ count = 600 }: { count?: number }) {
 export function HeroScene() {
   const [mounted, setMounted] = useState(false);
   const reduced = usePrefersReducedMotion();
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  useEffect(() => {
+    // Defer Canvas mount until the browser is idle so the LCP text paints
+    // first and Three.js parsing/init doesn't block the main thread.
+    type IdleHandle = number;
+    type IdleWindow = Window & {
+      requestIdleCallback?: (
+        cb: () => void,
+        opts?: { timeout: number },
+      ) => IdleHandle;
+      cancelIdleCallback?: (h: IdleHandle) => void;
+    };
+    const w = window as IdleWindow;
+    let handle: IdleHandle;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    if (typeof w.requestIdleCallback === "function") {
+      handle = w.requestIdleCallback(() => setMounted(true), { timeout: 800 });
+    } else {
+      timeoutId = setTimeout(() => setMounted(true), 200);
+    }
+    return () => {
+      if (handle && typeof w.cancelIdleCallback === "function") {
+        w.cancelIdleCallback(handle);
+      }
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
+  if (!mounted) return <StaticHeroFallback />;
   if (reduced) return <StaticHeroFallback />;
 
   return (
