@@ -371,9 +371,12 @@ function Droplet() {
         const span = to.trigger - from.trigger;
         t = span > 0 ? (scrollY - from.trigger) / span : 0;
       }
-      // Smoothstep eases the arrival/departure on every segment so the
-      // droplet doesn't bolt between adjacent rects at constant velocity.
-      const eased = t * t * (3 - 2 * t);
+      // Plateau remap: the droplet rests fully on the "from" waypoint for
+      // the first 40% of the segment, transitions to the "to" waypoint over
+      // the middle 20%, then rests fully on the "to" waypoint for the last
+      // 40%. This is what gives the "drop fills each box, then slides into
+      // the next" feel — without it the droplet is always mid-morph.
+      const eased = smoothstep(0.4, 0.6, t);
 
       const cx = from.cx + (to.cx - from.cx) * eased;
       const cy = from.cy + (to.cy - from.cy) * eased;
