@@ -1,10 +1,57 @@
 "use client";
 
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { SITE } from "@/lib/data";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { SplitText } from "@/components/ui/SplitText";
+
+type Burst = { x: number; y: number; key: number };
+
+function CopyBurst({ burst }: { burst: Burst }) {
+  // Twelve particles spraying radially from the click point. Memoized per
+  // burst so the angles/speeds stay stable across re-renders during the
+  // ~700ms animation window.
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        angle: (i / 12) * Math.PI * 2 + Math.random() * 0.4,
+        distance: 50 + Math.random() * 40,
+        size: 4 + Math.random() * 4,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [burst.key],
+  );
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed z-50"
+      style={{ left: burst.x, top: burst.y }}
+    >
+      {particles.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute block rounded-full bg-[--color-accent]"
+          style={{
+            width: p.size,
+            height: p.size,
+            marginLeft: -p.size / 2,
+            marginTop: -p.size / 2,
+            boxShadow: "0 0 12px var(--color-accent)",
+          }}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 0.6 }}
+          animate={{
+            x: Math.cos(p.angle) * p.distance,
+            y: Math.sin(p.angle) * p.distance,
+            opacity: 0,
+            scale: 1,
+          }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function Contact() {
   const ref = useRef<HTMLDivElement>(null);
@@ -16,13 +63,16 @@ export function Contact() {
   const opacity = useTransform(scrollYProgress, [0, 0.4, 1], [0.4, 1, 1]);
 
   const [copied, setCopied] = useState(false);
+  const [burst, setBurst] = useState<Burst | null>(null);
   const onCopyEmail = async (e: React.MouseEvent) => {
     if (!navigator.clipboard) return; // let the mailto: link fire
     e.preventDefault();
     try {
       await navigator.clipboard.writeText(SITE.email);
       setCopied(true);
+      setBurst({ x: e.clientX, y: e.clientY, key: Date.now() });
       window.setTimeout(() => setCopied(false), 1800);
+      window.setTimeout(() => setBurst(null), 800);
     } catch {
       // fallback: let the link's default mailto behavior happen
       window.location.href = `mailto:${SITE.email}`;
@@ -134,6 +184,7 @@ export function Contact() {
           </div>
         </div>
       </div>
+      <AnimatePresence>{burst ? <CopyBurst burst={burst} /> : null}</AnimatePresence>
     </section>
   );
 }

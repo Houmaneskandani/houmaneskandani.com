@@ -182,6 +182,49 @@ function useClickShock(meshRef: React.RefObject<THREE.Mesh | null>) {
   }, [meshRef]);
 }
 
+/**
+ * Type "houman" anywhere on the page → the timestamp lands here. Blobs
+ * read it each frame, compute time-since-trigger, and spike their
+ * distortion / scale wildly for ~2.5 seconds before decaying back. The
+ * easter egg is shared across all blobs so they react together.
+ */
+const easterEggRef = { triggered: 0 };
+
+function useEasterEgg() {
+  useEffect(() => {
+    const seq = "houman";
+    let progress = 0;
+    const onKey = (e: KeyboardEvent) => {
+      // Don't fire while user is typing in inputs.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+        return;
+      }
+      const c = e.key.toLowerCase();
+      if (c === seq[progress]) {
+        progress++;
+        if (progress === seq.length) {
+          easterEggRef.triggered = performance.now();
+          progress = 0;
+        }
+      } else if (c === seq[0]) {
+        progress = 1;
+      } else {
+        progress = 0;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+}
+
+function eggIntensity(): number {
+  if (!easterEggRef.triggered) return 0;
+  const sec = (performance.now() - easterEggRef.triggered) / 1000;
+  if (sec >= 2.5) return 0;
+  return Math.max(0, 1 - sec / 2.5);
+}
+
 function useSharedMouse() {
   const mouse = useRef(new THREE.Vector2(0, 0));
   useEffect(() => {
@@ -223,6 +266,7 @@ function HeroBlob() {
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
   useClickShock(mesh);
+  useEasterEgg();
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -231,6 +275,14 @@ function HeroBlob() {
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(4, delta));
     // Click shockwave decay: ~half-life 350ms.
     m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
+    // Easter egg: typed "houman" → spike distortion + click strength so the
+    // blob bursts and recovers over ~2.5s.
+    const egg = eggIntensity();
+    m.uniforms.uDistortion.value = 0.6 + egg * 1.4;
+    m.uniforms.uClickStrength.value = Math.max(
+      m.uniforms.uClickStrength.value,
+      egg,
+    );
 
     const p = readDropProgress();
 
@@ -398,6 +450,12 @@ function Droplet() {
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
     m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
+    const egg = eggIntensity();
+    m.uniforms.uDistortion.value = 0.45 + egg * 1.2;
+    m.uniforms.uClickStrength.value = Math.max(
+      m.uniforms.uClickStrength.value,
+      egg,
+    );
 
     const p = readDropProgress();
     const cam = state.camera as THREE.PerspectiveCamera;
