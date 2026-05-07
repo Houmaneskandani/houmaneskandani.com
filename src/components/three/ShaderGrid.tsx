@@ -3,6 +3,7 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
  * Cursor-reactive shader plane. The fragment shader draws a procedural
@@ -147,10 +148,25 @@ function Plane() {
   );
 }
 
+function StaticShaderFallback() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(60% 50% at 30% 30%, rgba(138,92,255,0.4) 0%, transparent 60%), radial-gradient(40% 40% at 75% 70%, rgba(200,255,0,0.22) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
+      }}
+    />
+  );
+}
+
 export function ShaderGrid() {
   const [mounted, setMounted] = useState(false);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+  if (reduced) return <StaticShaderFallback />;
 
   return (
     <Canvas
@@ -158,6 +174,7 @@ export function ShaderGrid() {
       dpr={[1, 1.5]}
       camera={{ position: [0, 0, 1], zoom: 1 }}
       gl={{ antialias: false, powerPreference: "high-performance" }}
+      fallback={<StaticShaderFallback />}
     >
       <Suspense fallback={null}>
         <Plane />

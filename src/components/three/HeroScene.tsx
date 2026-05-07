@@ -3,6 +3,20 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useRef, Suspense, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
+import { usePrefersReducedMotion } from "@/lib/hooks";
+
+function StaticHeroFallback() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0"
+      style={{
+        background:
+          "radial-gradient(60% 60% at 50% 45%, rgba(138,92,255,0.45) 0%, transparent 60%), radial-gradient(40% 40% at 70% 65%, rgba(200,255,0,0.25) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
+      }}
+    />
+  );
+}
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
@@ -216,14 +230,17 @@ function Particles({ count = 600 }: { count?: number }) {
 
 export function HeroScene() {
   const [mounted, setMounted] = useState(false);
+  const reduced = usePrefersReducedMotion();
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+  if (reduced) return <StaticHeroFallback />;
 
   return (
     <Canvas
       dpr={[1, 1.6]}
       camera={{ position: [0, 0, 3.6], fov: 45 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      fallback={<StaticHeroFallback />}
     >
       <Suspense fallback={null}>
         <ambientLight intensity={0.5} />

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/lib/hooks";
 
 type Props = {
   text: string;
@@ -19,6 +20,7 @@ export function SplitText({
 }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(false);
+  const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
@@ -44,6 +46,14 @@ export function SplitText({
   }, []);
 
   const words = text.split(" ");
+
+  if (reduced) {
+    return (
+      <span ref={ref} className={cn("inline-block", className)}>
+        {text}
+      </span>
+    );
+  }
 
   return (
     <span ref={ref} className={cn("inline-block", className)}>

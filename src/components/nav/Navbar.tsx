@@ -38,9 +38,23 @@ export function Navbar() {
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-      className="fixed inset-x-0 top-0 z-40 mix-blend-difference"
+      className="fixed inset-x-0 top-0 z-40"
     >
-      <div className="mx-auto flex w-full items-center justify-between px-6 py-5 md:px-10">
+      {/* Always-on subtle top mask so text stays legible over WebGL hero. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-24 [background:linear-gradient(to_bottom,rgba(7,7,10,0.55),rgba(7,7,10,0))]"
+      />
+      {/* Heavier blurred bar appears once you start scrolling. */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 transition-[opacity,backdrop-filter] duration-500 ${
+          scrolled
+            ? "opacity-100 backdrop-blur-md [background:linear-gradient(to_bottom,rgba(7,7,10,0.78),rgba(7,7,10,0.55))] [border-bottom:1px_solid_var(--color-line)]"
+            : "opacity-0"
+        }`}
+      />
+      <div className="relative mx-auto flex w-full items-center justify-between px-6 py-5 md:px-10">
         <Link
           href="/"
           className="flex items-center gap-3 text-fg"

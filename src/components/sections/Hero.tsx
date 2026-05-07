@@ -36,14 +36,14 @@ export function Hero() {
           transition={{ duration: 1.5, delay: 0.2 }}
           className="text-display text-[14vw] leading-[0.86] md:text-[10.5vw]"
         >
-          <SplitText text="Backend." className="block" delay={0.1} />
+          <SplitText text="Backends that hold." className="block" delay={0.1} />
           <SplitText
-            text="APIs."
+            text="APIs that don't lie."
             className="block text-[--color-accent]"
             delay={0.25}
           />
           <SplitText
-            text="Cloud platform."
+            text="Platforms that sleep."
             className="block opacity-80"
             delay={0.4}
           />

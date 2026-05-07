@@ -2,10 +2,16 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { PROJECTS, type Project } from "@/lib/data";
 import { Reveal } from "@/components/ui/Reveal";
 import { SplitText } from "@/components/ui/SplitText";
+
+const ProjectHero = dynamic(
+  () => import("@/components/three/ProjectHero").then((m) => m.ProjectHero),
+  { ssr: false },
+);
 
 export function Work() {
   const [hovered, setHovered] = useState<Project | null>(null);
@@ -94,26 +100,41 @@ export function Work() {
         {hovered ? (
           <motion.div
             ref={previewRef}
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none fixed z-30 hidden h-72 w-96 -translate-x-1/2 -translate-y-1/2 rounded-xl p-8 md:block"
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="pointer-events-none fixed z-30 hidden h-80 w-[28rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl md:block"
             style={{
-              background: `radial-gradient(circle at 30% 20%, ${hovered.accent}40 0%, transparent 60%), linear-gradient(135deg, #0d0d12 0%, #1a1a22 100%)`,
-              border: `1px solid ${hovered.accent}40`,
-              boxShadow: `0 30px 80px -20px ${hovered.accent}30`,
+              border: `1px solid ${hovered.accent}55`,
+              boxShadow: `0 30px 80px -20px ${hovered.accent}40`,
             }}
           >
-            <p className="text-eyebrow" style={{ color: hovered.accent }}>
-              {hovered.id}
-            </p>
-            <p className="mt-3 text-display text-2xl leading-tight">
-              {hovered.title}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-[--color-muted]">
-              {hovered.summary}
-            </p>
+            {/* Per-project shader scene, tinted by accent. Remounts per row
+                so the shader picks up the new accent color cleanly. */}
+            <div className="absolute inset-0">
+              <ProjectHero key={hovered.id} accent={hovered.accent} />
+            </div>
+            {/* Bottom-fade for legibility */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(7,7,10,0.85) 0%, rgba(7,7,10,0.25) 35%, transparent 65%)",
+              }}
+            />
+            <div className="relative flex h-full flex-col justify-end p-6">
+              <p className="text-eyebrow" style={{ color: hovered.accent }}>
+                {hovered.id} · {hovered.year}
+              </p>
+              <p className="mt-2 text-display text-2xl leading-tight">
+                {hovered.title}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-[--color-muted]">
+                {hovered.summary}
+              </p>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>

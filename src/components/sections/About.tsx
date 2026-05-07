@@ -60,10 +60,10 @@ export function About() {
                 <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
                   I&apos;m a backend engineer with 5+ years building
                   high-security, multi-tenant APIs — most of that time at
-                  IDEMIA, on the card-issuance platform that processes
-                  <span className="text-[--color-fg]"> 1M+ secure card
-                  transactions a day</span> for Wells Fargo, Capital One, and
-                  Citi.
+                  IDEMIA, on the card-issuance platform that ships secure
+                  card transactions at bank scale for{" "}
+                  <span className="text-[--color-fg]">Wells Fargo, Capital
+                  One, and Citi</span>.
                 </p>
               </Reveal>
               <Reveal delay={0.07} className="mt-5">
@@ -159,18 +159,35 @@ function PhotoSlot() {
   // /public/portrait.jpg exists; the gradient stays as the loading background
   // and as the visual treatment that surrounds the photo.
   const hasPortrait = true;
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: photoProgress } = useScroll({
+    target: wrapRef,
+    offset: ["start end", "end start"],
+  });
+  // Ken Burns–style slow scale, plus a tiny vertical drift.
+  const scale = useTransform(photoProgress, [0, 1], [1.02, 1.08]);
+  const yDrift = useTransform(photoProgress, [0, 1], ["-1%", "1%"]);
+
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-md border border-[--color-line] bg-[--color-bg-elev]">
+    <div
+      ref={wrapRef}
+      className="group relative aspect-[4/5] overflow-hidden rounded-md border border-[--color-line] bg-[--color-bg-elev]"
+    >
       {hasPortrait ? (
         <>
-          <Image
-            src="/portrait.jpg"
-            alt="Houman Eskandani"
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover"
-            priority={false}
-          />
+          <motion.div
+            style={{ scale, y: yDrift }}
+            className="absolute inset-0 transition-[filter] duration-700 [filter:saturate(0.85)_contrast(1.05)] group-hover:[filter:saturate(1)_contrast(1)]"
+          >
+            <Image
+              src="/portrait.jpg"
+              alt="Houman Eskandani"
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover"
+              priority={false}
+            />
+          </motion.div>
           {/* Editorial gradient: subtle violet wash + bottom darkening for legibility */}
           <div
             aria-hidden
