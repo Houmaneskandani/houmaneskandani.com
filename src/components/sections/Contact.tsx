@@ -42,9 +42,9 @@ export function Contact() {
 
         <motion.div style={{ scale, opacity }} className="origin-left">
           <h2 className="text-display text-[14vw] leading-[0.9] md:text-[11vw]">
-            <SplitText text="Have a system" className="block" />
+            <SplitText text="Hiring a" className="block" />
             <SplitText
-              text="that needs to scale?"
+              text="backend engineer?"
               className="block text-[--color-accent]"
               delay={0.05}
             />
@@ -92,7 +92,7 @@ export function Contact() {
               </AnimatePresence>
             </div>
             <p className="mt-4 max-w-md text-sm text-[--color-muted]">
-              Click to copy. Or hit the button below to download a one-page CV.
+              Click to copy. Or grab the one-page CV below.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -128,7 +128,7 @@ export function Contact() {
               ))}
             </div>
             <p className="mt-6 max-w-xs text-right text-xs text-[--color-muted]">
-              Based in {SITE.location}. Open to remote, hybrid, and on-site
+              Based in {SITE.location}. Open to remote, hybrid, or on-site
               backend / platform roles.
             </p>
           </div>

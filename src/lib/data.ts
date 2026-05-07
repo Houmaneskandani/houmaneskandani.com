@@ -5,7 +5,7 @@ export const SITE = {
   role: "Backend & Cloud Platform Engineer",
   shortRole: "Backend Engineer",
   tagline:
-    "I build high-security, multi-tenant APIs and the cloud platforms behind them — Go, GraphQL, Postgres, Kubernetes — with an eye on what stays calm at 1M+ transactions a day.",
+    "Currently at The Vport on the VCloud GraphQL platform. Three years before that at IDEMIA shipping card personalization for Wells Fargo, Capital One, and Citi. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
   email: "eskandanihouman@gmail.com",
   location: "Irvine, CA · Remote-friendly",
   // Will host at houmaneskandani.com once DNS is pointed at Vercel.

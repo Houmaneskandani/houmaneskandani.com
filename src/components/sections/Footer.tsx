@@ -14,9 +14,9 @@ export function Footer() {
             className="mx-6 inline-flex items-center gap-6 text-display text-2xl text-[--color-fg]/80 md:text-3xl"
           >
             <span className="text-[--color-accent]">✺</span>
-            Available for systems & infra work — Q3 2026
+            Open to backend & platform roles
             <span className="text-[--color-accent]">✺</span>
-            Open to collaborations
+            {SITE.email}
           </span>
         ))}
       </Marquee>

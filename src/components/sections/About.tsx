@@ -77,6 +77,22 @@ export function About() {
               </Reveal>
               <Reveal delay={0.14} className="mt-5">
                 <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
+                  On the side I build with AI. Most recently{" "}
+                  <a
+                    href="https://github.com/Houmaneskandani/ApplyAgent"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[--color-fg] underline decoration-[--color-line] underline-offset-4 transition-colors hover:text-[--color-accent] hover:decoration-[--color-accent]"
+                  >
+                    ApplyAgent
+                  </a>
+                  , an autonomous agent that fills out and submits real job
+                  applications by reasoning over live DOM with Claude and
+                  Playwright.
+                </p>
+              </Reveal>
+              <Reveal delay={0.21} className="mt-5">
+                <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
                   I obsess over the boring guarantees — idempotency,
                   ordering, durability — because that&apos;s where products
                   live or die at scale.

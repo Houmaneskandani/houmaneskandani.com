@@ -40,7 +40,9 @@ export function Hero() {
       <div className="pointer-events-none absolute left-6 top-28 md:left-10">
         <p className="text-eyebrow">
           <span className="text-[--color-accent]">●</span>{" "}
-          <span className="ml-2">PORTFOLIO · 2026</span>
+          <span className="ml-2">
+            IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES
+          </span>
         </p>
       </div>
 
@@ -63,17 +65,17 @@ export function Hero() {
           </span>
           <span aria-hidden>
             <SplitText
-              text="Backends that hold."
+              text="Hi, I'm Houman."
               className="block"
               delay={0.1}
             />
             <SplitText
-              text="APIs that don't lie."
+              text="Backend engineer."
               className="block text-[--color-accent]"
               delay={0.25}
             />
             <SplitText
-              text="Platforms that sleep."
+              text="Building APIs and AI agents."
               className="block opacity-80"
               delay={0.4}
             />
@@ -109,9 +111,9 @@ export function Hero() {
               </span>
             </a>
             <div className="hidden text-right text-eyebrow md:block">
-              <p className="opacity-60">Currently shipping</p>
+              <p className="opacity-60">Currently at</p>
               <p className="mt-1 text-[--color-fg]">
-                VCloud · GraphQL · GKE
+                The Vport · IDEMIA before that
               </p>
             </div>
           </motion.div>
