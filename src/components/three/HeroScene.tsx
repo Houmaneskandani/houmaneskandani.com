@@ -270,6 +270,22 @@ function HeroBlob() {
 }
 
 /**
+ * Per-section color mood. As the user reads each section the droplet's
+ * surface colors lerp toward that section's palette — subtle but the page
+ * feels staged: violet in the hero, warmer amber over Work, cool cyan
+ * over Capabilities, brand lime at the email finale.
+ */
+const SECTION_MOOD: Record<string, [string, string]> = {
+  top: ["#8a5cff", "#c8ff00"],
+  about: ["#9d6cff", "#c8ff00"],
+  work: ["#ff7a3d", "#c8ff00"],
+  capabilities: ["#3ad4ff", "#c8ff00"],
+  contact: ["#c8ff00", "#8a5cff"],
+};
+
+const SECTION_IDS = ["top", "about", "work", "capabilities", "contact"];
+
+/**
  * Path the droplet traces through the viewport as the page scrolls past
  * the hero. Each entry is a normalized viewport coordinate (0,0 = top-left,
  * 1,1 = bottom-right). The droplet glides along a Catmull-Rom spline
@@ -334,6 +350,47 @@ function Droplet() {
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
   useClickShock(mesh);
+
+  // Section bounds for color-mood detection. Cached on resize since layout
+  // changes can shift section offsets.
+  const sectionsRef = useRef<Array<{ id: string; top: number; bottom: number }>>(
+    [],
+  );
+  useEffect(() => {
+    const collect = () => {
+      sectionsRef.current = SECTION_IDS.map((id) => {
+        const el = document.getElementById(id);
+        const top = el?.offsetTop ?? 0;
+        const height = el?.offsetHeight ?? 0;
+        return { id, top, bottom: top + height };
+      });
+    };
+    collect();
+    window.addEventListener("resize", collect);
+    return () => window.removeEventListener("resize", collect);
+  }, []);
+
+  // Idle tracking: any scroll, pointer move, or keypress resets the timer.
+  // After the threshold, the droplet quietly grows + drifts in a slow loop
+  // as a "showing off" gesture — snaps back the moment the user moves.
+  const lastInteractionRef = useRef<number>(
+    typeof performance !== "undefined" ? performance.now() : 0,
+  );
+  useEffect(() => {
+    const reset = () => {
+      lastInteractionRef.current = performance.now();
+    };
+    window.addEventListener("scroll", reset, { passive: true });
+    window.addEventListener("pointermove", reset, { passive: true });
+    window.addEventListener("keydown", reset, { passive: true });
+    window.addEventListener("touchstart", reset, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", reset);
+      window.removeEventListener("pointermove", reset);
+      window.removeEventListener("keydown", reset);
+      window.removeEventListener("touchstart", reset);
+    };
+  }, []);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -405,28 +462,67 @@ function Droplet() {
     const wanderX = Math.sin(t * 0.41) * 0.015 * visibleW;
     const wanderY = Math.cos(t * 0.33) * 0.015 * visibleH;
 
+    // Idle "showing off" mode: after ~18s of no interaction, the droplet
+    // grows slightly and sweeps in a slow loop around its current spot.
+    // Snaps back the moment any input arrives.
+    const idleSec =
+      typeof performance !== "undefined"
+        ? (performance.now() - lastInteractionRef.current) / 1000
+        : 0;
+    const idleness = smoothstep(15, 28, idleSec);
+    const idleDriftX = Math.cos(t * 0.32) * idleness * 0.7;
+    const idleDriftY = Math.sin(t * 0.32) * idleness * 0.7;
+
     mesh.current.position.set(
-      targetX + wanderX * handoff,
-      targetY + wanderY * handoff,
+      targetX + wanderX * handoff + idleDriftX,
+      targetY + wanderY * handoff + idleDriftY,
       0,
     );
 
     // Size: small and consistent through the journey, with a gentle bulge
-    // at the very end (finale near the email) to draw the eye.
+    // at the very end (finale near the email) to draw the eye. Idle mode
+    // adds another bump on top.
     const finaleBulge = smoothstep(0.85, 1.0, journeyClamped) * 0.18;
     const breath = 1 + Math.sin(t * 1.6) * 0.025;
     const baseSize = 0.4 + finaleBulge;
     const aSize = 0.4;
-    const size = (aSize * (1 - handoff) + baseSize * handoff) * breath * emerge;
+    const idleScale = 1 + idleness * 0.45;
+    const size =
+      (aSize * (1 - handoff) + baseSize * handoff) *
+      breath *
+      idleScale *
+      emerge;
     mesh.current.scale.setScalar(size);
 
     // Opacity: bright as it pinches off and arcs, softens to 0.55 once it
-    // joins the journey, brightens again at the finale.
+    // joins the journey, brightens again at the finale, brightens further
+    // in idle mode so it draws attention back.
     const aOpacity = 1 - 0.45 * travel;
-    const bOpacity = 0.55 + finaleBulge * 0.6;
+    const bOpacity = 0.55 + finaleBulge * 0.6 + idleness * 0.3;
     const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
+
+    // Section mood — find which section's vertical center is closest to
+    // viewport center and lerp the surface palette toward that section's
+    // colors. Slow lerp (rate 1) so transitions feel ambient, not flicker.
+    const sections = sectionsRef.current;
+    if (sections.length > 0) {
+      const center = scrollY + vh / 2;
+      let activeId = "top";
+      for (const s of sections) {
+        if (center >= s.top && center < s.bottom) {
+          activeId = s.id;
+          break;
+        }
+      }
+      const palette = SECTION_MOOD[activeId] ?? SECTION_MOOD.top;
+      const tColor = new THREE.Color(palette[0]);
+      const cColor = new THREE.Color(palette[1]);
+      const colorK = lerpK(1.2, delta);
+      m.uniforms.uColorB.value.lerp(tColor, colorK);
+      m.uniforms.uColorC.value.lerp(cColor, colorK);
+    }
 
     // Continuous slow spin keeps the surface alive even when the droplet
     // is hovering on a path point during a slow scroll.
