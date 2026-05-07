@@ -1,8 +1,15 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  EffectComposer,
+  Bloom,
+  ChromaticAberration,
+} from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import { useRef, Suspense, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
+import { Vector2 } from "three";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 
 function StaticHeroFallback() {
@@ -22,6 +29,7 @@ const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uDistortion;
   uniform float uRipple;
+  uniform float uClickStrength;
   uniform vec2 uMouse;
 
   varying vec3 vNormal;
@@ -99,8 +107,13 @@ const vertexShader = /* glsl */ `
     vec2 mDir = uMouse - normal.xy;
     float mDist = length(mDir);
     float ripple = sin(mDist * 8.0 - uTime * 3.0) * exp(-mDist * 3.0);
+    // Click shockwave: a sharper, faster, larger-amplitude ripple radiating
+    // from the cursor position, gated by uClickStrength which JS decays
+    // exponentially after each click. Reads as a tap on the surface.
+    float shock = sin(mDist * 5.0 - uTime * 8.0) * exp(-mDist * 1.4)
+      * uClickStrength * 0.5;
     float displacement = (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion
-      + ripple * uRipple;
+      + ripple * uRipple + shock;
     pos += normal * displacement;
     pos.xy += uMouse * 0.08;
 
@@ -140,12 +153,33 @@ function makeBlobUniforms(distortion: number, ripple: number, opacity: number) {
     uTime: { value: 0 },
     uDistortion: { value: distortion },
     uRipple: { value: ripple },
+    uClickStrength: { value: 0 },
     uOpacity: { value: opacity },
     uMouse: { value: new THREE.Vector2(0, 0) },
     uColorA: { value: new THREE.Color("#0a0a12") },
     uColorB: { value: new THREE.Color("#8a5cff") },
     uColorC: { value: new THREE.Color("#c8ff00") },
   };
+}
+
+/**
+ * Global pointer-down listener that tells every blob to punch a click
+ * shockwave from the cursor position. Each blob installs its own copy of
+ * this so they decay independently — keeps the responsibility local and
+ * avoids a context provider just for one number.
+ */
+function useClickShock(meshRef: React.RefObject<THREE.Mesh | null>) {
+  useEffect(() => {
+    const onDown = () => {
+      const mesh = meshRef.current;
+      if (!mesh) return;
+      const m = mesh.material as THREE.ShaderMaterial;
+      if (!m?.uniforms?.uClickStrength) return;
+      m.uniforms.uClickStrength.value = 1;
+    };
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    return () => window.removeEventListener("pointerdown", onDown);
+  }, [meshRef]);
 }
 
 function useSharedMouse() {
@@ -188,12 +222,15 @@ function HeroBlob() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
+  useClickShock(mesh);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(4, delta));
+    // Click shockwave decay: ~half-life 350ms.
+    m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
 
     const p = readDropProgress();
 
@@ -296,12 +333,14 @@ function Droplet() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
+  useClickShock(mesh);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
+    m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
 
     const p = readDropProgress();
     const cam = state.camera as THREE.PerspectiveCamera;
@@ -508,6 +547,25 @@ export function HeroScene() {
         <HeroBlob />
         <Droplet />
         <Particles />
+        {/* Post: gentle bloom on the boiling-water highlights + a faint
+            chromatic aberration that bleeds the violet/lime accents at the
+            blob's silhouette. Tuned soft so it reads as cinematic glow,
+            not a screen-space FX showcase. */}
+        <EffectComposer multisampling={0} disableNormalPass>
+          <Bloom
+            mipmapBlur
+            intensity={0.55}
+            luminanceThreshold={0.25}
+            luminanceSmoothing={0.6}
+            radius={0.85}
+          />
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            offset={new Vector2(0.0009, 0.0014)}
+            radialModulation={false}
+            modulationOffset={0}
+          />
+        </EffectComposer>
       </Suspense>
     </Canvas>
   );
