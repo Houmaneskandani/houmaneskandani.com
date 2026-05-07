@@ -9,16 +9,16 @@ const HeroScene = dynamic(
 
 /**
  * Site-wide WebGL backdrop for the homepage. The blob fills the viewport at
- * scroll = 0 (hero) and drifts to the top-right corner as the user scrolls
- * past the first viewport — staying alive in peripheral vision while reading.
- *
- * Hidden below `md` so phones don't pay the WebGL battery cost.
+ * scroll = 0 (hero), then a droplet pinches off and arcs to the top-right
+ * corner as the user scrolls — staying alive in peripheral vision while
+ * reading. Renders on all viewports; reduced-motion users get a static
+ * gradient fallback inside HeroScene.
  */
 export function PersistentDrop() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0 hidden md:block"
+      className="pointer-events-none fixed inset-0 z-0"
     >
       <HeroScene />
     </div>

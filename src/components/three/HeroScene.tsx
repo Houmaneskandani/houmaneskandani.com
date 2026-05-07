@@ -89,14 +89,18 @@ const vertexShader = /* glsl */ `
 
   void main() {
     vec3 pos = position;
-    float t = uTime * 0.25;
-    float n = cnoise(normal * 1.4 + vec3(t, t * 0.7, -t * 0.5));
-    float n2 = cnoise(normal * 3.5 + vec3(-t * 0.6, t * 1.2, t));
+    // Faster overall time + three noise scales = boiling water surface:
+    // slow large-scale convection, medium turbulence, and fast micro-bubbles.
+    float t = uTime * 0.55;
+    float n = cnoise(normal * 1.4 + vec3(t * 0.8, t * 0.6, -t * 0.5));
+    float n2 = cnoise(normal * 3.0 + vec3(-t * 1.6, t * 1.9, t * 1.1));
+    float n3 = cnoise(normal * 5.5 + vec3(t * 2.6, -t * 2.1, t * 2.3));
     // Cursor ripple: push the sphere outward where the cursor is "near" in xy.
     vec2 mDir = uMouse - normal.xy;
     float mDist = length(mDir);
     float ripple = sin(mDist * 8.0 - uTime * 3.0) * exp(-mDist * 3.0);
-    float displacement = (n * 0.55 + n2 * 0.25) * uDistortion + ripple * uRipple;
+    float displacement = (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion
+      + ripple * uRipple;
     pos += normal * displacement;
     pos.xy += uMouse * 0.08;
 
@@ -131,25 +135,21 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-function Blob() {
-  const mesh = useRef<THREE.Mesh>(null);
+function makeBlobUniforms(distortion: number, ripple: number, opacity: number) {
+  return {
+    uTime: { value: 0 },
+    uDistortion: { value: distortion },
+    uRipple: { value: ripple },
+    uOpacity: { value: opacity },
+    uMouse: { value: new THREE.Vector2(0, 0) },
+    uColorA: { value: new THREE.Color("#0a0a12") },
+    uColorB: { value: new THREE.Color("#8a5cff") },
+    uColorC: { value: new THREE.Color("#c8ff00") },
+  };
+}
+
+function useSharedMouse() {
   const mouse = useRef(new THREE.Vector2(0, 0));
-  const targetPos = useRef(new THREE.Vector3());
-
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uDistortion: { value: 0.55 },
-      uRipple: { value: 0.18 },
-      uOpacity: { value: 1 },
-      uMouse: { value: new THREE.Vector2(0, 0) },
-      uColorA: { value: new THREE.Color("#0a0a12") },
-      uColorB: { value: new THREE.Color("#8a5cff") },
-      uColorC: { value: new THREE.Color("#c8ff00") },
-    }),
-    [],
-  );
-
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -158,43 +158,62 @@ function Blob() {
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
   }, []);
+  return mouse;
+}
+
+function readDropProgress(): number {
+  const sy = typeof window !== "undefined" ? window.scrollY : 0;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+  // Compress to 0.65vh so the drop completes faster — matches the energy of
+  // the rest of the hero rather than dragging across a whole viewport.
+  return Math.min(Math.max(sy / (vh * 0.65), 0), 1);
+}
+
+/**
+ * Frame-rate independent lerp factor. `rate` is roughly "what fraction
+ * approaches per second" — using exp keeps motion identical whether the
+ * client renders at 60Hz, 120Hz, or drops to 30. Critical for the drop
+ * separation reading the same on every machine.
+ */
+function lerpK(rate: number, delta: number): number {
+  return 1 - Math.exp(-rate * delta);
+}
+
+function smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = Math.min(Math.max((x - edge0) / (edge1 - edge0), 0), 1);
+  return t * t * (3 - 2 * t);
+}
+
+function HeroBlob() {
+  const mesh = useRef<THREE.Mesh>(null);
+  const mouse = useSharedMouse();
+  const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
-    m.uniforms.uMouse.value.lerp(mouse.current, 0.06);
+    m.uniforms.uMouse.value.lerp(mouse.current, lerpK(4, delta));
 
-    // Drop progress: 0 at top of page, 1 once scrolled past one viewport.
-    // Eased so the transition feels weighty rather than linear.
-    const sy = typeof window !== "undefined" ? window.scrollY : 0;
-    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
-    const raw = Math.min(Math.max(sy / vh, 0), 1);
-    const p = raw * raw * (3 - 2 * raw); // smoothstep
+    const p = readDropProgress();
 
-    // Project the viewport-relative parking spot into world space using the
-    // active camera. Recomputing every frame keeps the corner anchored on
-    // resize without a separate listener.
-    const cam = state.camera as THREE.PerspectiveCamera;
-    const fovRad = (cam.fov * Math.PI) / 180;
-    const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
-    const visibleW = visibleH * cam.aspect;
-    const margin = 0.95;
-    const parkX = visibleW / 2 - margin;
-    const parkY = visibleH / 2 - margin;
+    // Phase 1 — pinch (0..0.18): hero builds tension as if surface tension
+    // is bunching up before releasing the droplet. Returns to neutral by 0.18.
+    const pinch = Math.sin(smoothstep(0, 0.18, p) * Math.PI) * 0.07;
 
-    const targetX = parkX * p;
-    const targetY = parkY * p;
-    const targetScale = 1 - p * 0.6;
-    const targetOpacity = 1 - p * 0.55;
+    // Phase 2 — collapse (0.10..0.55): hero scale & opacity ease to 0 as the
+    // droplet has now pinched off and is travelling.
+    const fade = smoothstep(0.1, 0.55, p);
+    const targetScale = 1 - fade;
+    const targetOpacity = 1 - fade;
 
-    targetPos.current.set(targetX, targetY, 0);
-    mesh.current.position.lerp(targetPos.current, 0.08);
-    const cs = mesh.current.scale.x;
-    const ns = cs + (targetScale - cs) * 0.08;
-    mesh.current.scale.setScalar(ns);
+    const k = lerpK(8, delta);
+    const cur = mesh.current.scale.y;
+    const ns = cur + (targetScale - cur) * k;
+    // Squash while pinching (X bulges out as Y compresses), then back to round.
+    mesh.current.scale.set(ns * (1 + pinch * 0.6), ns * (1 - pinch), ns);
     m.uniforms.uOpacity.value +=
-      (targetOpacity - m.uniforms.uOpacity.value) * 0.08;
+      (targetOpacity - m.uniforms.uOpacity.value) * k;
 
     mesh.current.rotation.y += delta * 0.06;
     mesh.current.rotation.x += delta * 0.02;
@@ -203,6 +222,114 @@ function Blob() {
   return (
     <mesh ref={mesh}>
       <icosahedronGeometry args={[1.4, 64]} />
+      <shaderMaterial
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={uniforms}
+        transparent
+      />
+    </mesh>
+  );
+}
+
+function Droplet() {
+  const mesh = useRef<THREE.Mesh>(null);
+  const mouse = useSharedMouse();
+  const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
+  const lastPos = useRef(new THREE.Vector3());
+  const targetVec = useRef(new THREE.Vector3());
+  const stretchSmoothed = useRef(0);
+  const angleSmoothed = useRef(0);
+
+  useFrame((state, delta) => {
+    if (!mesh.current) return;
+    const m = mesh.current.material as THREE.ShaderMaterial;
+    m.uniforms.uTime.value = state.clock.elapsedTime;
+    m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
+
+    const p = readDropProgress();
+
+    // Parking spot in world space, recomputed each frame so it tracks viewport
+    // resizes without a separate listener.
+    const cam = state.camera as THREE.PerspectiveCamera;
+    const fovRad = (cam.fov * Math.PI) / 180;
+    const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
+    const visibleW = visibleH * cam.aspect;
+    const margin = 0.85;
+    const parkX = visibleW / 2 - margin;
+    const parkY = visibleH / 2 - margin;
+
+    // Three smoothstep'd phases keep the separation feeling consistent at any
+    // scroll speed:
+    //   emerge  0.08..0.22  — droplet grows from inside the hero
+    //   travel  0.10..0.85  — bezier arc from origin to the corner
+    //   settle  0.85..1.00  — droplet hits parked size, calms down
+    const emerge = smoothstep(0.08, 0.22, p);
+    const travel = smoothstep(0.1, 0.85, p);
+
+    // Quadratic bezier: P0 origin, P1 control above-and-right (the droplet
+    // rises first before swooping into the corner), P2 parking spot.
+    const cx = parkX * 0.35;
+    const cy = parkY * 2.4;
+    const omt = 1 - travel;
+    const targetX = 2 * omt * travel * cx + travel * travel * parkX;
+    const targetY = 2 * omt * travel * cy + travel * travel * parkY;
+
+    targetVec.current.set(targetX, targetY, 0);
+    mesh.current.position.lerp(targetVec.current, lerpK(9, delta));
+
+    // Velocity (post-lerp) drives a soft stretch along direction of motion.
+    const dx = mesh.current.position.x - lastPos.current.x;
+    const dy = mesh.current.position.y - lastPos.current.y;
+    const speed = Math.sqrt(dx * dx + dy * dy);
+    lastPos.current.copy(mesh.current.position);
+
+    // Smooth speed and angle separately so jitter on the underlying scroll
+    // value doesn't punch through to the visible squash.
+    const targetStretch = Math.min(speed * 3.2, 0.28);
+    stretchSmoothed.current +=
+      (targetStretch - stretchSmoothed.current) * lerpK(6, delta);
+    if (speed > 0.001) {
+      const a = Math.atan2(dy, dx);
+      // Wrap-aware angle smoothing.
+      let diff = a - angleSmoothed.current;
+      if (diff > Math.PI) diff -= 2 * Math.PI;
+      if (diff < -Math.PI) diff += 2 * Math.PI;
+      angleSmoothed.current += diff * lerpK(8, delta);
+    }
+
+    // Base size with a gentle bulge mid-travel — the droplet pulses while
+    // soaring. Lands at ~0.4 by the time it parks.
+    const bulge = Math.sin(travel * Math.PI) * 0.08;
+    const baseScale = emerge * (0.4 + bulge);
+
+    const angle = angleSmoothed.current;
+    const stretch = stretchSmoothed.current;
+    const sx = baseScale * (1 + stretch * Math.abs(Math.cos(angle)));
+    const sy = baseScale * (1 + stretch * Math.abs(Math.sin(angle)));
+    const sz = baseScale * (1 - stretch * 0.4);
+
+    const sk = lerpK(12, delta);
+    mesh.current.scale.set(
+      mesh.current.scale.x + (sx - mesh.current.scale.x) * sk,
+      mesh.current.scale.y + (sy - mesh.current.scale.y) * sk,
+      mesh.current.scale.z + (sz - mesh.current.scale.z) * sk,
+    );
+
+    // Visible during travel only, dimmed once parked so the corner orb is a
+    // soft accent rather than competing with content.
+    const targetOpacity = emerge * (1 - 0.45 * travel);
+    m.uniforms.uOpacity.value +=
+      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(8, delta);
+
+    // Spin faster than the hero, plus extra spin while in motion.
+    mesh.current.rotation.y += delta * (0.18 + stretch * 1.2);
+    mesh.current.rotation.x += delta * 0.08;
+  });
+
+  return (
+    <mesh ref={mesh} scale={0}>
+      <icosahedronGeometry args={[1.4, 48]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -310,7 +437,8 @@ export function HeroScene() {
       <Suspense fallback={null}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[3, 4, 5]} intensity={1.1} />
-        <Blob />
+        <HeroBlob />
+        <Droplet />
         <Particles />
       </Suspense>
     </Canvas>
