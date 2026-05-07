@@ -47,6 +47,7 @@ export function Work() {
           {PROJECTS.map((p, i) => (
             <li
               key={p.id}
+              data-drop="project"
               onMouseEnter={() => setHovered(p)}
               onMouseLeave={() => setHovered(null)}
               className="group relative border-b border-[--color-line]"

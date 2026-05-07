@@ -52,10 +52,12 @@ export function About() {
             {/* Photo slot — drop your portrait into /public/portrait.png
                 and it will replace this gradient placeholder automatically. */}
             <Reveal className="col-span-12 md:col-span-4">
-              <PhotoSlot />
+              <div data-drop="portrait">
+                <PhotoSlot />
+              </div>
             </Reveal>
 
-            <div className="col-span-12 md:col-span-8 md:pl-2">
+            <div data-drop="description" className="col-span-12 md:col-span-8 md:pl-2">
               <Reveal>
                 <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
                   I&apos;m a backend engineer with 5+ years building
@@ -124,6 +126,7 @@ export function About() {
               {EXPERIENCE.map((e) => (
                 <li
                   key={`${e.company}-${e.period}`}
+                  data-drop="experience"
                   className="grid grid-cols-12 gap-x-6 py-5"
                 >
                   <span className="col-span-3 text-sm text-[--color-muted] md:col-span-2">

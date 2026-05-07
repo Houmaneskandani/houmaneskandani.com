@@ -56,7 +56,7 @@ export function Capabilities() {
             <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
               {CAPABILITIES.map((cap, i) => (
                 <Reveal key={cap.label} delay={i * 0.07}>
-                  <div className="border-t border-[--color-line] pt-6">
+                  <div data-drop="capability" className="border-t border-[--color-line] pt-6">
                     <p className="text-eyebrow text-[--color-fg]">
                       0{i + 1} · {cap.label}
                     </p>

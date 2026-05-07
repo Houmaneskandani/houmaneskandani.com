@@ -232,14 +232,70 @@ function HeroBlob() {
   );
 }
 
+/**
+ * Path the droplet traces through the viewport as the page scrolls past
+ * the hero. Each entry is a normalized viewport coordinate (0,0 = top-left,
+ * 1,1 = bottom-right). The droplet glides along a Catmull-Rom spline
+ * through these points, so it stays in your peripheral vision (always near
+ * the edge, never over the reading column) while the page scrolls.
+ *
+ * Treat this as a single continuous gesture: top-right corner → down the
+ * right edge → across the bottom → up the left edge → settles near the
+ * email CTA. One smooth flowing motion the whole way down.
+ */
+const JOURNEY_PATH: ReadonlyArray<readonly [number, number]> = [
+  [0.92, 0.13], // corner park (matches Phase A's parking spot)
+  [0.96, 0.34], // upper right edge
+  [0.93, 0.6], // mid right edge
+  [0.84, 0.86], // bottom-right corner
+  [0.5, 0.93], // bottom middle
+  [0.16, 0.86], // bottom-left corner
+  [0.07, 0.55], // mid left edge
+  [0.22, 0.45], // drift into email area
+];
+
+/**
+ * Catmull-Rom interpolation between two anchors with neighbor influence.
+ * Centripetal-ish curve: smooth, no overshoot, stays close to control
+ * points. Perfect for a drifting motion that feels organic but predictable.
+ */
+function catmullRom(
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+  t: number,
+): number {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  return (
+    0.5 *
+    (2 * p1 +
+      (-p0 + p2) * t +
+      (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+      (-p0 + 3 * p1 - 3 * p2 + p3) * t3)
+  );
+}
+
+function pathPoint(progress: number): [number, number] {
+  const segs = JOURNEY_PATH.length - 1;
+  const total = progress * segs;
+  const segIdx = Math.min(Math.floor(total), segs - 1);
+  const t = total - segIdx;
+  const p0 = JOURNEY_PATH[Math.max(segIdx - 1, 0)];
+  const p1 = JOURNEY_PATH[segIdx];
+  const p2 = JOURNEY_PATH[Math.min(segIdx + 1, JOURNEY_PATH.length - 1)];
+  const p3 = JOURNEY_PATH[Math.min(segIdx + 2, JOURNEY_PATH.length - 1)];
+  return [
+    catmullRom(p0[0], p1[0], p2[0], p3[0], t),
+    catmullRom(p0[1], p1[1], p2[1], p3[1], t),
+  ];
+}
+
 function Droplet() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
-  const lastPos = useRef(new THREE.Vector3());
-  const targetVec = useRef(new THREE.Vector3());
-  const stretchSmoothed = useRef(0);
-  const angleSmoothed = useRef(0);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -248,82 +304,94 @@ function Droplet() {
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
 
     const p = readDropProgress();
-
-    // Parking spot in world space, recomputed each frame so it tracks viewport
-    // resizes without a separate listener.
     const cam = state.camera as THREE.PerspectiveCamera;
     const fovRad = (cam.fov * Math.PI) / 180;
     const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
     const visibleW = visibleH * cam.aspect;
-    const margin = 0.85;
-    const parkX = visibleW / 2 - margin;
-    const parkY = visibleH / 2 - margin;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    const docH =
+      typeof document !== "undefined"
+        ? document.documentElement.scrollHeight
+        : vh;
 
-    // Three smoothstep'd phases keep the separation feeling consistent at any
-    // scroll speed:
-    //   emerge  0.08..0.22  — droplet grows from inside the hero
-    //   travel  0.10..0.85  — bezier arc from origin to the corner
-    //   settle  0.85..1.00  — droplet hits parked size, calms down
     const emerge = smoothstep(0.08, 0.22, p);
+
+    // ─── Phase A — pinch off the hero and arc into the top-right corner.
+    const cornerMargin = 0.85;
+    const parkXworld = visibleW / 2 - cornerMargin;
+    const parkYworld = visibleH / 2 - cornerMargin;
     const travel = smoothstep(0.1, 0.85, p);
-
-    // Quadratic bezier: P0 origin, P1 control above-and-right (the droplet
-    // rises first before swooping into the corner), P2 parking spot.
-    const cx = parkX * 0.35;
-    const cy = parkY * 2.4;
+    const arcCx = parkXworld * 0.35;
+    const arcCy = parkYworld * 2.4;
     const omt = 1 - travel;
-    const targetX = 2 * omt * travel * cx + travel * travel * parkX;
-    const targetY = 2 * omt * travel * cy + travel * travel * parkY;
+    const aX = 2 * omt * travel * arcCx + travel * travel * parkXworld;
+    const aY = 2 * omt * travel * arcCy + travel * travel * parkYworld;
 
-    targetVec.current.set(targetX, targetY, 0);
-    mesh.current.position.lerp(targetVec.current, lerpK(9, delta));
+    // ─── Phase B — drift along the journey path. Map the scroll past the
+    // hero to a 0..1 progress along the spline; smoothstep applied so the
+    // droplet eases in/out of the entire journey rather than running at
+    // constant speed end-to-end.
+    const phaseAEndScroll = vh * 0.65;
+    const journeyEndScroll = Math.max(docH - vh, phaseAEndScroll + 1);
+    const journeyRaw =
+      (scrollY - phaseAEndScroll) /
+      (journeyEndScroll - phaseAEndScroll);
+    const journeyClamped = Math.min(Math.max(journeyRaw, 0), 1);
+    // Single eased curve over the entire journey — gives slow start, slow
+    // finish, gentle pull through the middle. Feels like a glide, not a
+    // forced march from box to box.
+    const journeyEased =
+      journeyClamped * journeyClamped * (3 - 2 * journeyClamped);
+    const [nx, ny] = pathPoint(journeyEased);
 
-    // Velocity (post-lerp) drives a soft stretch along direction of motion.
-    const dx = mesh.current.position.x - lastPos.current.x;
-    const dy = mesh.current.position.y - lastPos.current.y;
-    const speed = Math.sqrt(dx * dx + dy * dy);
-    lastPos.current.copy(mesh.current.position);
+    // Convert normalized viewport coords → world. Y is flipped because CSS
+    // y-down vs three.js y-up.
+    const ndcX = nx * 2 - 1;
+    const ndcY = -(ny * 2 - 1);
+    const bX = (ndcX * visibleW) / 2;
+    const bY = (ndcY * visibleH) / 2;
 
-    // Smooth speed and angle separately so jitter on the underlying scroll
-    // value doesn't punch through to the visible squash.
-    const targetStretch = Math.min(speed * 3.2, 0.28);
-    stretchSmoothed.current +=
-      (targetStretch - stretchSmoothed.current) * lerpK(6, delta);
-    if (speed > 0.001) {
-      const a = Math.atan2(dy, dx);
-      // Wrap-aware angle smoothing.
-      let diff = a - angleSmoothed.current;
-      if (diff > Math.PI) diff -= 2 * Math.PI;
-      if (diff < -Math.PI) diff += 2 * Math.PI;
-      angleSmoothed.current += diff * lerpK(8, delta);
-    }
+    // Hand off when Phase A has fully delivered the droplet to the corner.
+    // Phase B's start anchor (JOURNEY_PATH[0]) sits at the same corner spot,
+    // so the transition is invisible.
+    const handoff = smoothstep(0.85, 1.0, p);
+    const targetX = aX * (1 - handoff) + bX * handoff;
+    const targetY = aY * (1 - handoff) + bY * handoff;
 
-    // Base size with a gentle bulge mid-travel — the droplet pulses while
-    // soaring. Lands at ~0.4 by the time it parks.
-    const bulge = Math.sin(travel * Math.PI) * 0.08;
-    const baseScale = emerge * (0.4 + bulge);
+    // Subtle organic wander on top of the path — the droplet doesn't ride
+    // the spline like a train on a rail; it drifts off it slightly the way
+    // a real droplet would. Tiny amplitudes so the macro path still reads.
+    const t = state.clock.elapsedTime;
+    const wanderX = Math.sin(t * 0.41) * 0.015 * visibleW;
+    const wanderY = Math.cos(t * 0.33) * 0.015 * visibleH;
 
-    const angle = angleSmoothed.current;
-    const stretch = stretchSmoothed.current;
-    const sx = baseScale * (1 + stretch * Math.abs(Math.cos(angle)));
-    const sy = baseScale * (1 + stretch * Math.abs(Math.sin(angle)));
-    const sz = baseScale * (1 - stretch * 0.4);
-
-    const sk = lerpK(12, delta);
-    mesh.current.scale.set(
-      mesh.current.scale.x + (sx - mesh.current.scale.x) * sk,
-      mesh.current.scale.y + (sy - mesh.current.scale.y) * sk,
-      mesh.current.scale.z + (sz - mesh.current.scale.z) * sk,
+    mesh.current.position.set(
+      targetX + wanderX * handoff,
+      targetY + wanderY * handoff,
+      0,
     );
 
-    // Visible during travel only, dimmed once parked so the corner orb is a
-    // soft accent rather than competing with content.
-    const targetOpacity = emerge * (1 - 0.45 * travel);
-    m.uniforms.uOpacity.value +=
-      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(8, delta);
+    // Size: small and consistent through the journey, with a gentle bulge
+    // at the very end (finale near the email) to draw the eye.
+    const finaleBulge = smoothstep(0.85, 1.0, journeyClamped) * 0.18;
+    const breath = 1 + Math.sin(t * 1.6) * 0.025;
+    const baseSize = 0.4 + finaleBulge;
+    const aSize = 0.4;
+    const size = (aSize * (1 - handoff) + baseSize * handoff) * breath * emerge;
+    mesh.current.scale.setScalar(size);
 
-    // Spin faster than the hero, plus extra spin while in motion.
-    mesh.current.rotation.y += delta * (0.18 + stretch * 1.2);
+    // Opacity: bright as it pinches off and arcs, softens to 0.55 once it
+    // joins the journey, brightens again at the finale.
+    const aOpacity = 1 - 0.45 * travel;
+    const bOpacity = 0.55 + finaleBulge * 0.6;
+    const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
+    m.uniforms.uOpacity.value +=
+      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
+
+    // Continuous slow spin keeps the surface alive even when the droplet
+    // is hovering on a path point during a slow scroll.
+    mesh.current.rotation.y += delta * 0.18;
     mesh.current.rotation.x += delta * 0.08;
   });
 
