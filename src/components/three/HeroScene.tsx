@@ -705,7 +705,7 @@ export function HeroScene() {
             chromatic aberration that bleeds the violet/lime accents at the
             blob's silhouette. Tuned soft so it reads as cinematic glow,
             not a screen-space FX showcase. */}
-        <EffectComposer multisampling={0} disableNormalPass>
+        <EffectComposer multisampling={0}>
           <Bloom
             mipmapBlur
             intensity={0.55}
