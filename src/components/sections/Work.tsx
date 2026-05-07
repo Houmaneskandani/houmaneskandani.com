@@ -55,17 +55,26 @@ export function Work() {
                 <Link
                   href={p.href ?? `/work/${p.slug}`}
                   data-cursor="VIEW"
-                  className="relative grid grid-cols-12 items-center gap-x-6 px-1 py-8 md:py-10"
+                  className="relative grid grid-cols-12 items-center gap-x-6 gap-y-4 px-1 py-7 md:py-10"
                 >
-                  <span className="col-span-2 text-eyebrow md:col-span-1">
+                  {/* Standalone number column — desktop only. On mobile the
+                      number rides as a small eyebrow above the title so the
+                      title can use the full row width. */}
+                  <span className="hidden text-eyebrow md:col-span-1 md:block">
                     {p.id}
                   </span>
-                  <div className="col-span-10 md:col-span-6">
-                    <h3 className="text-display text-3xl leading-[1.05] transition-transform duration-700 group-hover:translate-x-3 md:text-5xl">
+                  <div className="col-span-12 md:col-span-6">
+                    <p className="text-eyebrow mb-2 md:hidden">
+                      <span className="text-[--color-accent]">{p.id}</span>
+                      <span className="opacity-60">
+                        {" "}· {p.year} · {p.role}
+                      </span>
+                    </p>
+                    <h3 className="text-display text-[2rem] leading-[1.05] transition-transform duration-700 group-hover:translate-x-3 md:text-5xl">
                       {p.title}
                     </h3>
                   </div>
-                  <div className="col-span-12 mt-2 flex flex-wrap gap-2 md:col-span-3 md:mt-0">
+                  <div className="col-span-12 flex flex-wrap gap-2 md:col-span-3">
                     {p.tags.slice(0, 3).map((t) => (
                       <span
                         key={t}
@@ -75,7 +84,8 @@ export function Work() {
                       </span>
                     ))}
                   </div>
-                  <div className="col-span-12 text-eyebrow md:col-span-2 md:text-right">
+                  {/* Year/role — desktop only, mirrored above on mobile. */}
+                  <div className="hidden text-eyebrow md:col-span-2 md:block md:text-right">
                     {p.year} · {p.role}
                   </div>
 
