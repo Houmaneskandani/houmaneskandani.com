@@ -60,7 +60,7 @@ export function Navbar() {
           className="flex items-center gap-3 text-fg"
           data-cursor="HOME"
         >
-          <Logo size={28} className="text-fg" animate={false} />
+          <Logo size={44} className="text-fg" animate={false} />
           <span className="hidden text-eyebrow md:inline">
             {SITE.shortRole}
           </span>
