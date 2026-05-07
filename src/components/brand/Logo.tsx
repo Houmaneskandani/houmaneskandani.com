@@ -1,20 +1,60 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
+const BASE = {
+  hLeftX: 11,
+  hRightX: 22,
+  hY1: 9,
+  hY2: 31,
+  crossY: 20,
+  sStart: 27,
+  sCtrl: 14,
+  sEnd: 27,
+  kEndX1: 32,
+  kEndY1: 11,
+  kEndX2: 32,
+  kEndY2: 29,
+  dotX: 32,
+  dotY: 11,
+  dotR: 1.6,
+  tilt: 0,
+};
+
+function jitter() {
+  const r = (range: number) => (Math.random() - 0.5) * range;
+  return {
+    hLeftX: 11 + r(0.6),
+    hRightX: 22 + r(0.6),
+    hY1: 9 + r(0.6),
+    hY2: 31 + r(0.6),
+    crossY: 20 + r(0.5),
+    sStart: 27 + r(1),
+    sCtrl: 14 + r(2.2),
+    sEnd: 27 + r(1),
+    kEndX1: 32 + r(0.8),
+    kEndY1: 11 + r(0.8),
+    kEndX2: 32 + r(0.8),
+    kEndY2: 29 + r(0.8),
+    dotX: 32 + r(0.6),
+    dotY: 11 + r(0.6),
+    dotR: 1.6 + r(0.25),
+    tilt: r(2.4),
+  };
+}
+
 /**
- * HSK monogram.
+ * HSK monogram — generative.
  *
  * Three letterforms living inside the same square, all reduced to their
  * dominant strokes and overlapped so the mark reads as an abstract sigil
- * first and the letters resolve on closer inspection.
- *
- * Composition (40x40 viewBox):
- *  - H  → two verticals + horizontal cross-bar, full height (the "skeleton")
- *  - S  → continuous Bézier curve threading between the H verticals
- *  - K  → one vertical (shared) + diagonal slash extending to the right
- *  - A small lime accent dot, deliberately off-center, anchors the mark.
+ * first and the letters resolve on closer inspection. The mark is
+ * subtly perturbed on every mount so two visits never see exactly the
+ * same logo — small jitter on stroke positions, S-curve tension, K-slash
+ * endpoints, and accent dot location. Looks identical at a glance, but
+ * a careful eye catches the variation.
  */
 export function Logo({
   size = 40,
@@ -26,6 +66,14 @@ export function Logo({
   animate?: boolean;
 }) {
   const stroke = "currentColor";
+  // SSR uses BASE coords so the server HTML matches the first client render
+  // (no hydration mismatch). After hydration, swap to a per-mount random
+  // jitter so each visit shows a slightly different mark.
+  const [j, setJ] = useState(BASE);
+  useEffect(() => {
+    setJ(jitter());
+  }, []);
+
   return (
     <motion.svg
       viewBox="0 0 40 40"
@@ -34,11 +82,10 @@ export function Logo({
       className={cn("inline-block shrink-0", className)}
       aria-label="HSK monogram"
       role="img"
-      initial={animate ? { opacity: 0, scale: 0.8, rotate: -8 } : false}
-      animate={animate ? { opacity: 1, scale: 1, rotate: 0 } : undefined}
+      initial={animate ? { opacity: 0, scale: 0.8, rotate: -8 + j.tilt } : false}
+      animate={animate ? { opacity: 1, scale: 1, rotate: j.tilt } : undefined}
       transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Outer rounded frame: gives the mark a "stamp" silhouette */}
       <rect
         x="2.5"
         y="2.5"
@@ -51,30 +98,39 @@ export function Logo({
         strokeWidth="1"
       />
 
-      {/* H-skeleton (two verticals + crossbar). Slight inward bias so the S
-          can thread between them without the mark looking like a literal H. */}
       <g stroke={stroke} strokeWidth="1.6" strokeLinecap="round" fill="none">
-        <line x1="11" y1="9" x2="11" y2="31" />
-        <line x1="22" y1="9" x2="22" y2="31" />
-        <line x1="11" y1="20" x2="22" y2="20" />
+        <line x1={j.hLeftX} y1={j.hY1} x2={j.hLeftX} y2={j.hY2} />
+        <line x1={j.hRightX} y1={j.hY1} x2={j.hRightX} y2={j.hY2} />
+        <line x1={j.hLeftX} y1={j.crossY} x2={j.hRightX} y2={j.crossY} />
 
-        {/* S-curve threading the H. Two stacked half-loops, compressed so it
-            integrates rather than reads as a separate letter. */}
         <path
-          d="M27 11
-             C 14 11, 14 19, 27 19
-             C 14 19, 14 27, 27 27"
+          d={`M${j.sStart} 11
+             C ${j.sCtrl} 11, ${j.sCtrl} 19, ${j.sEnd} 19
+             C ${j.sCtrl} 19, ${j.sCtrl} 27, ${j.sEnd} 27`}
         />
 
-        {/* K diagonals — share the right H vertical (x=22) as their stem and
-            slash outward. The crossing on the right edge creates the "X" that
-            anchors the abstraction. */}
-        <line x1="22" y1="20" x2="32" y2="11" strokeOpacity="0.85" />
-        <line x1="22" y1="20" x2="32" y2="29" strokeOpacity="0.85" />
+        <line
+          x1={j.hRightX}
+          y1={j.crossY}
+          x2={j.kEndX1}
+          y2={j.kEndY1}
+          strokeOpacity="0.85"
+        />
+        <line
+          x1={j.hRightX}
+          y1={j.crossY}
+          x2={j.kEndX2}
+          y2={j.kEndY2}
+          strokeOpacity="0.85"
+        />
       </g>
 
-      {/* Off-center accent — the brand spark */}
-      <circle cx="32" cy="11" r="1.6" fill="var(--color-accent, #c8ff00)" />
+      <circle
+        cx={j.dotX}
+        cy={j.dotY}
+        r={j.dotR}
+        fill="var(--color-accent, #c8ff00)"
+      />
     </motion.svg>
   );
 }

@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { CustomCursor } from "@/components/cursor/CustomCursor";
 import { PageTransition } from "@/components/transitions/PageTransition";
+import { Preloader } from "@/components/transitions/Preloader";
 import { SITE } from "@/lib/data";
 import "./globals.css";
 
@@ -144,6 +145,7 @@ export default function RootLayout({
           <PageTransition>{children}</PageTransition>
           <div aria-hidden className="grain" />
         </SmoothScroll>
+        <Preloader />
         <CustomCursor />
         <Analytics />
       </body>

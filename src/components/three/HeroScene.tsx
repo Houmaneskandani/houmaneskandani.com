@@ -1,8 +1,15 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
+import {
+  EffectComposer,
+  Bloom,
+  ChromaticAberration,
+} from "@react-three/postprocessing";
+import { BlendFunction } from "postprocessing";
 import { useRef, Suspense, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
+import { Vector2 } from "three";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 
 function StaticHeroFallback() {
@@ -22,6 +29,7 @@ const vertexShader = /* glsl */ `
   uniform float uTime;
   uniform float uDistortion;
   uniform float uRipple;
+  uniform float uClickStrength;
   uniform vec2 uMouse;
 
   varying vec3 vNormal;
@@ -99,8 +107,13 @@ const vertexShader = /* glsl */ `
     vec2 mDir = uMouse - normal.xy;
     float mDist = length(mDir);
     float ripple = sin(mDist * 8.0 - uTime * 3.0) * exp(-mDist * 3.0);
+    // Click shockwave: a sharper, faster, larger-amplitude ripple radiating
+    // from the cursor position, gated by uClickStrength which JS decays
+    // exponentially after each click. Reads as a tap on the surface.
+    float shock = sin(mDist * 5.0 - uTime * 8.0) * exp(-mDist * 1.4)
+      * uClickStrength * 0.5;
     float displacement = (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion
-      + ripple * uRipple;
+      + ripple * uRipple + shock;
     pos += normal * displacement;
     pos.xy += uMouse * 0.08;
 
@@ -140,12 +153,76 @@ function makeBlobUniforms(distortion: number, ripple: number, opacity: number) {
     uTime: { value: 0 },
     uDistortion: { value: distortion },
     uRipple: { value: ripple },
+    uClickStrength: { value: 0 },
     uOpacity: { value: opacity },
     uMouse: { value: new THREE.Vector2(0, 0) },
     uColorA: { value: new THREE.Color("#0a0a12") },
     uColorB: { value: new THREE.Color("#8a5cff") },
     uColorC: { value: new THREE.Color("#c8ff00") },
   };
+}
+
+/**
+ * Global pointer-down listener that tells every blob to punch a click
+ * shockwave from the cursor position. Each blob installs its own copy of
+ * this so they decay independently — keeps the responsibility local and
+ * avoids a context provider just for one number.
+ */
+function useClickShock(meshRef: React.RefObject<THREE.Mesh | null>) {
+  useEffect(() => {
+    const onDown = () => {
+      const mesh = meshRef.current;
+      if (!mesh) return;
+      const m = mesh.material as THREE.ShaderMaterial;
+      if (!m?.uniforms?.uClickStrength) return;
+      m.uniforms.uClickStrength.value = 1;
+    };
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    return () => window.removeEventListener("pointerdown", onDown);
+  }, [meshRef]);
+}
+
+/**
+ * Type "houman" anywhere on the page → the timestamp lands here. Blobs
+ * read it each frame, compute time-since-trigger, and spike their
+ * distortion / scale wildly for ~2.5 seconds before decaying back. The
+ * easter egg is shared across all blobs so they react together.
+ */
+const easterEggRef = { triggered: 0 };
+
+function useEasterEgg() {
+  useEffect(() => {
+    const seq = "houman";
+    let progress = 0;
+    const onKey = (e: KeyboardEvent) => {
+      // Don't fire while user is typing in inputs.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) {
+        return;
+      }
+      const c = e.key.toLowerCase();
+      if (c === seq[progress]) {
+        progress++;
+        if (progress === seq.length) {
+          easterEggRef.triggered = performance.now();
+          progress = 0;
+        }
+      } else if (c === seq[0]) {
+        progress = 1;
+      } else {
+        progress = 0;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+}
+
+function eggIntensity(): number {
+  if (!easterEggRef.triggered) return 0;
+  const sec = (performance.now() - easterEggRef.triggered) / 1000;
+  if (sec >= 2.5) return 0;
+  return Math.max(0, 1 - sec / 2.5);
 }
 
 function useSharedMouse() {
@@ -188,12 +265,24 @@ function HeroBlob() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
+  useClickShock(mesh);
+  useEasterEgg();
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(4, delta));
+    // Click shockwave decay: ~half-life 350ms.
+    m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
+    // Easter egg: typed "houman" → spike distortion + click strength so the
+    // blob bursts and recovers over ~2.5s.
+    const egg = eggIntensity();
+    m.uniforms.uDistortion.value = 0.6 + egg * 1.4;
+    m.uniforms.uClickStrength.value = Math.max(
+      m.uniforms.uClickStrength.value,
+      egg,
+    );
 
     const p = readDropProgress();
 
@@ -231,6 +320,22 @@ function HeroBlob() {
     </mesh>
   );
 }
+
+/**
+ * Per-section color mood. As the user reads each section the droplet's
+ * surface colors lerp toward that section's palette — subtle but the page
+ * feels staged: violet in the hero, warmer amber over Work, cool cyan
+ * over Capabilities, brand lime at the email finale.
+ */
+const SECTION_MOOD: Record<string, [string, string]> = {
+  top: ["#8a5cff", "#c8ff00"],
+  about: ["#9d6cff", "#c8ff00"],
+  work: ["#ff7a3d", "#c8ff00"],
+  capabilities: ["#3ad4ff", "#c8ff00"],
+  contact: ["#c8ff00", "#8a5cff"],
+};
+
+const SECTION_IDS = ["top", "about", "work", "capabilities", "contact"];
 
 /**
  * Path the droplet traces through the viewport as the page scrolls past
@@ -296,12 +401,61 @@ function Droplet() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
+  useClickShock(mesh);
+
+  // Section bounds for color-mood detection. Cached on resize since layout
+  // changes can shift section offsets.
+  const sectionsRef = useRef<Array<{ id: string; top: number; bottom: number }>>(
+    [],
+  );
+  useEffect(() => {
+    const collect = () => {
+      sectionsRef.current = SECTION_IDS.map((id) => {
+        const el = document.getElementById(id);
+        const top = el?.offsetTop ?? 0;
+        const height = el?.offsetHeight ?? 0;
+        return { id, top, bottom: top + height };
+      });
+    };
+    collect();
+    window.addEventListener("resize", collect);
+    return () => window.removeEventListener("resize", collect);
+  }, []);
+
+  // Idle tracking: any scroll, pointer move, or keypress resets the timer.
+  // After the threshold, the droplet quietly grows + drifts in a slow loop
+  // as a "showing off" gesture — snaps back the moment the user moves.
+  const lastInteractionRef = useRef<number>(
+    typeof performance !== "undefined" ? performance.now() : 0,
+  );
+  useEffect(() => {
+    const reset = () => {
+      lastInteractionRef.current = performance.now();
+    };
+    window.addEventListener("scroll", reset, { passive: true });
+    window.addEventListener("pointermove", reset, { passive: true });
+    window.addEventListener("keydown", reset, { passive: true });
+    window.addEventListener("touchstart", reset, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", reset);
+      window.removeEventListener("pointermove", reset);
+      window.removeEventListener("keydown", reset);
+      window.removeEventListener("touchstart", reset);
+    };
+  }, []);
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
     m.uniforms.uTime.value = state.clock.elapsedTime;
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
+    m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
+    const egg = eggIntensity();
+    m.uniforms.uDistortion.value = 0.45 + egg * 1.2;
+    m.uniforms.uClickStrength.value = Math.max(
+      m.uniforms.uClickStrength.value,
+      egg,
+    );
 
     const p = readDropProgress();
     const cam = state.camera as THREE.PerspectiveCamera;
@@ -366,28 +520,67 @@ function Droplet() {
     const wanderX = Math.sin(t * 0.41) * 0.015 * visibleW;
     const wanderY = Math.cos(t * 0.33) * 0.015 * visibleH;
 
+    // Idle "showing off" mode: after ~18s of no interaction, the droplet
+    // grows slightly and sweeps in a slow loop around its current spot.
+    // Snaps back the moment any input arrives.
+    const idleSec =
+      typeof performance !== "undefined"
+        ? (performance.now() - lastInteractionRef.current) / 1000
+        : 0;
+    const idleness = smoothstep(15, 28, idleSec);
+    const idleDriftX = Math.cos(t * 0.32) * idleness * 0.7;
+    const idleDriftY = Math.sin(t * 0.32) * idleness * 0.7;
+
     mesh.current.position.set(
-      targetX + wanderX * handoff,
-      targetY + wanderY * handoff,
+      targetX + wanderX * handoff + idleDriftX,
+      targetY + wanderY * handoff + idleDriftY,
       0,
     );
 
     // Size: small and consistent through the journey, with a gentle bulge
-    // at the very end (finale near the email) to draw the eye.
+    // at the very end (finale near the email) to draw the eye. Idle mode
+    // adds another bump on top.
     const finaleBulge = smoothstep(0.85, 1.0, journeyClamped) * 0.18;
     const breath = 1 + Math.sin(t * 1.6) * 0.025;
     const baseSize = 0.4 + finaleBulge;
     const aSize = 0.4;
-    const size = (aSize * (1 - handoff) + baseSize * handoff) * breath * emerge;
+    const idleScale = 1 + idleness * 0.45;
+    const size =
+      (aSize * (1 - handoff) + baseSize * handoff) *
+      breath *
+      idleScale *
+      emerge;
     mesh.current.scale.setScalar(size);
 
     // Opacity: bright as it pinches off and arcs, softens to 0.55 once it
-    // joins the journey, brightens again at the finale.
+    // joins the journey, brightens again at the finale, brightens further
+    // in idle mode so it draws attention back.
     const aOpacity = 1 - 0.45 * travel;
-    const bOpacity = 0.55 + finaleBulge * 0.6;
+    const bOpacity = 0.55 + finaleBulge * 0.6 + idleness * 0.3;
     const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
+
+    // Section mood — find which section's vertical center is closest to
+    // viewport center and lerp the surface palette toward that section's
+    // colors. Slow lerp (rate 1) so transitions feel ambient, not flicker.
+    const sections = sectionsRef.current;
+    if (sections.length > 0) {
+      const center = scrollY + vh / 2;
+      let activeId = "top";
+      for (const s of sections) {
+        if (center >= s.top && center < s.bottom) {
+          activeId = s.id;
+          break;
+        }
+      }
+      const palette = SECTION_MOOD[activeId] ?? SECTION_MOOD.top;
+      const tColor = new THREE.Color(palette[0]);
+      const cColor = new THREE.Color(palette[1]);
+      const colorK = lerpK(1.2, delta);
+      m.uniforms.uColorB.value.lerp(tColor, colorK);
+      m.uniforms.uColorC.value.lerp(cColor, colorK);
+    }
 
     // Continuous slow spin keeps the surface alive even when the droplet
     // is hovering on a path point during a slow scroll.
@@ -508,6 +701,25 @@ export function HeroScene() {
         <HeroBlob />
         <Droplet />
         <Particles />
+        {/* Post: gentle bloom on the boiling-water highlights + a faint
+            chromatic aberration that bleeds the violet/lime accents at the
+            blob's silhouette. Tuned soft so it reads as cinematic glow,
+            not a screen-space FX showcase. */}
+        <EffectComposer multisampling={0}>
+          <Bloom
+            mipmapBlur
+            intensity={0.55}
+            luminanceThreshold={0.25}
+            luminanceSmoothing={0.6}
+            radius={0.85}
+          />
+          <ChromaticAberration
+            blendFunction={BlendFunction.NORMAL}
+            offset={new Vector2(0.0009, 0.0014)}
+            radialModulation={false}
+            modulationOffset={0}
+          />
+        </EffectComposer>
       </Suspense>
     </Canvas>
   );
