@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,21 +13,48 @@ const ProjectHero = dynamic(
   { ssr: false },
 );
 
+// Preview card dimensions — kept in sync with the className below so we can
+// position the card via inline left/top without relying on a CSS translate
+// (framer-motion's animated transform would override Tailwind's translate
+// utilities and leave the card off-screen).
+const PREVIEW_W = 448; // tailwind w-[28rem]
+const PREVIEW_H = 320; // tailwind h-80
+
 export function Work() {
   const [hovered, setHovered] = useState<Project | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const cursor = useRef({ x: 0, y: 0 });
 
-  const onMove = (e: React.MouseEvent) => {
+  // Position the card under the cursor without using CSS translate (which
+  // framer-motion overwrites once the entrance animation settles). We track
+  // the cursor at the document level so the card has a valid position the
+  // moment it mounts — no flash off-screen on first hover.
+  const place = (x: number, y: number) => {
     const el = previewRef.current;
     if (!el) return;
-    el.style.left = `${e.clientX}px`;
-    el.style.top = `${e.clientY}px`;
+    el.style.left = `${x - PREVIEW_W / 2}px`;
+    el.style.top = `${y - PREVIEW_H / 2}px`;
   };
+
+  useEffect(() => {
+    const onDocMove = (e: MouseEvent) => {
+      cursor.current.x = e.clientX;
+      cursor.current.y = e.clientY;
+      if (hovered) place(e.clientX, e.clientY);
+    };
+    window.addEventListener("mousemove", onDocMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onDocMove);
+  }, [hovered]);
+
+  // When a row activates, snap the card to the last known cursor position so
+  // it appears in the right place even before the next mousemove fires.
+  useEffect(() => {
+    if (hovered) place(cursor.current.x, cursor.current.y);
+  }, [hovered]);
 
   return (
     <section
       id="work"
-      onMouseMove={onMove}
       className="relative w-full px-6 py-32 md:px-10 md:py-48"
     >
       <div className="mx-auto w-full max-w-[1400px]">
@@ -104,7 +131,7 @@ export function Work() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="pointer-events-none fixed z-30 hidden h-80 w-[28rem] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl md:block"
+            className="pointer-events-none fixed z-30 hidden h-80 w-[28rem] overflow-hidden rounded-xl md:block"
             style={{
               border: `1px solid ${hovered.accent}55`,
               boxShadow: `0 30px 80px -20px ${hovered.accent}40`,
