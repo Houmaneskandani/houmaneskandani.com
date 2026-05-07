@@ -286,6 +286,14 @@ export const SIDE_PROJECTS: SideProject[] = [
     external: "https://github.com/Houmaneskandani/ApplyAgent",
     status: "Active",
   },
+  {
+    id: "02",
+    name: "Diamond Hand",
+    tag: "Python · Claude API · Hyperliquid · Streamlit",
+    description:
+      "Self-improving crypto trading system. A Claude-powered post-trade analyst grades every closed trade, writes rules into a learned-rules file, and the signal screener reads them before approving the next entry. Multi-strategy scanners (incl. liquidity sweep), per-strategy backtester, regime filter, and live execution on Hyperliquid perps.",
+    status: "Private · Live",
+  },
 ];
 
 export type Experience = {
