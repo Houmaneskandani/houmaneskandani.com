@@ -237,11 +237,26 @@ function HeroBlob() {
  * with a lot of small text get the lowest opacity; CTAs get the loudest.
  */
 const DROP_OPACITY: Record<string, number> = {
+  __corner: 0.55,
   portrait: 0.62,
   description: 0.32,
   experience: 0.4,
   project: 0.55,
+  capability: 0.35,
   email: 0.7,
+};
+
+type Waypoint = {
+  /** Center X / Y in viewport pixels, recomputed each frame. */
+  cx: number;
+  cy: number;
+  /** Width / height in viewport pixels. */
+  w: number;
+  h: number;
+  /** Document-Y (scroll position) where this waypoint is fully active. */
+  trigger: number;
+  /** Lookup key into DROP_OPACITY. */
+  kind: string;
 };
 
 function Droplet() {
@@ -249,16 +264,11 @@ function Droplet() {
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
   const lastPos = useRef(new THREE.Vector3());
-  const targetVec = useRef(new THREE.Vector3());
-  const stretchSmoothed = useRef(0);
-  const angleSmoothed = useRef(0);
 
-  // Cache the waypoint elements once per layout. The set rarely changes
-  // mid-session — re-collecting on resize is enough.
-  const waypointsRef = useRef<HTMLElement[]>([]);
+  const waypointElsRef = useRef<HTMLElement[]>([]);
   useEffect(() => {
     const collect = () => {
-      waypointsRef.current = Array.from(
+      waypointElsRef.current = Array.from(
         document.querySelectorAll<HTMLElement>("[data-drop]"),
       );
     };
@@ -274,127 +284,146 @@ function Droplet() {
     m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
 
     const p = readDropProgress();
-
     const cam = state.camera as THREE.PerspectiveCamera;
     const fovRad = (cam.fov * Math.PI) / 180;
     const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
     const visibleW = visibleH * cam.aspect;
-    const pxPerWorld =
-      typeof window !== "undefined" ? window.innerHeight / visibleH : 1;
+    const vw = typeof window !== "undefined" ? window.innerWidth : 1;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+    const pxPerWorld = vh / visibleH;
+    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
 
     const emerge = smoothstep(0.08, 0.22, p);
 
     // ─── Phase A — pinch off the hero and arc into the top-right corner.
-    // Quadratic bezier: P0 origin, P1 above-and-right, P2 parking spot.
-    const margin = 0.85;
-    const parkX = visibleW / 2 - margin;
-    const parkY = visibleH / 2 - margin;
+    const cornerMargin = 0.85;
+    const cornerSize = 0.4;
+    const parkXworld = visibleW / 2 - cornerMargin;
+    const parkYworld = visibleH / 2 - cornerMargin;
     const travel = smoothstep(0.1, 0.85, p);
-    const cx = parkX * 0.35;
-    const cy = parkY * 2.4;
+    const arcCx = parkXworld * 0.35;
+    const arcCy = parkYworld * 2.4;
     const omt = 1 - travel;
-    const aX = 2 * omt * travel * cx + travel * travel * parkX;
-    const aY = 2 * omt * travel * cy + travel * travel * parkY;
+    const aX = 2 * omt * travel * arcCx + travel * travel * parkXworld;
+    const aY = 2 * omt * travel * arcCy + travel * travel * parkYworld;
     const bulge = Math.sin(travel * Math.PI) * 0.08;
     const aScale = 0.4 + bulge;
     const aOpacity = 1 - 0.45 * travel;
 
-    // ─── Phase B — journey: lock onto the nearest [data-drop] element by
-    // viewport center, scale to fill its bounds, opacity per zone type.
+    // ─── Phase B — scroll-driven continuous interpolation between
+    // waypoints. Build the path each frame as: corner → wp1 → wp2 → … → wpN.
+    // Position is a pure function of scroll inside this segment, so the
+    // motion stays consistent regardless of framerate or scroll velocity.
     let bX = aX;
     let bY = aY;
     let bScaleX = aScale;
     let bScaleY = aScale;
     let bOpacity = aOpacity;
 
-    const waypoints = waypointsRef.current;
-    if (waypoints.length > 0 && typeof window !== "undefined") {
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      let activeIdx = 0;
-      let closest = Infinity;
-      for (let i = 0; i < waypoints.length; i++) {
-        const r = waypoints[i].getBoundingClientRect();
-        const center = r.top + r.height / 2;
-        const dist = Math.abs(center - vh / 2);
-        if (dist < closest) {
-          closest = dist;
-          activeIdx = i;
-        }
+    const els = waypointElsRef.current;
+    if (els.length > 0) {
+      // Synthetic corner waypoint anchors the start of the journey at the
+      // exact spot where Phase A left the droplet — so the handoff between
+      // phases is seamless rather than a jump.
+      const cornerCenterPx = {
+        x: vw - cornerMargin * pxPerWorld,
+        y: cornerMargin * pxPerWorld,
+      };
+      const cornerSizePx = cornerSize * 2 * 1.4 * pxPerWorld;
+      const phaseAEndScroll = vh * 0.65; // matches readDropProgress() denominator
+      const path: Waypoint[] = [
+        {
+          cx: cornerCenterPx.x,
+          cy: cornerCenterPx.y,
+          w: cornerSizePx,
+          h: cornerSizePx,
+          trigger: phaseAEndScroll,
+          kind: "__corner",
+        },
+      ];
+      for (const el of els) {
+        const r = el.getBoundingClientRect();
+        path.push({
+          cx: r.left + r.width / 2,
+          cy: r.top + r.height / 2,
+          w: r.width,
+          h: r.height,
+          trigger: r.top + scrollY + r.height / 2 - vh / 2,
+          kind: el.dataset.drop ?? "",
+        });
       }
+      // DOM order is mostly correct, but sort by trigger to be safe — handles
+      // overlapping/out-of-order tags without surprises.
+      path.sort((a, b) => a.trigger - b.trigger);
 
-      const r = waypoints[activeIdx].getBoundingClientRect();
-      const ndcX = ((r.left + r.width / 2) / vw) * 2 - 1;
-      const ndcY = -(((r.top + r.height / 2) / vh) * 2 - 1);
+      // Find the segment we're in: between wp[i] and wp[i+1].
+      let i = 0;
+      while (i < path.length - 1 && scrollY > path[i + 1].trigger) i++;
+      const from = path[i];
+      const to = path[Math.min(i + 1, path.length - 1)];
+
+      let t = 0;
+      if (i >= path.length - 1 || scrollY >= to.trigger) {
+        t = 1;
+      } else if (scrollY <= from.trigger) {
+        t = 0;
+      } else {
+        const span = to.trigger - from.trigger;
+        t = span > 0 ? (scrollY - from.trigger) / span : 0;
+      }
+      // Smoothstep eases the arrival/departure on every segment so the
+      // droplet doesn't bolt between adjacent rects at constant velocity.
+      const eased = t * t * (3 - 2 * t);
+
+      const cx = from.cx + (to.cx - from.cx) * eased;
+      const cy = from.cy + (to.cy - from.cy) * eased;
+      const w = from.w + (to.w - from.w) * eased;
+      const h = from.h + (to.h - from.h) * eased;
+
+      const ndcX = (cx / vw) * 2 - 1;
+      const ndcY = -(((cy / vh) * 2) - 1);
       bX = (ndcX * visibleW) / 2;
       bY = (ndcY * visibleH) / 2;
-      // Scale so the rest icosahedron's diameter (2 * 1.4) fits the rect.
-      // Distortion lets the surface bulge slightly beyond the rect edges,
-      // which sells the "water filling the box" feel.
-      bScaleX = r.width / pxPerWorld / 2.8;
-      bScaleY = r.height / pxPerWorld / 2.8;
-      const kind = waypoints[activeIdx].dataset.drop ?? "";
-      bOpacity = DROP_OPACITY[kind] ?? 0.5;
+      bScaleX = w / pxPerWorld / 2.8;
+      bScaleY = h / pxPerWorld / 2.8;
+
+      const opFrom = DROP_OPACITY[from.kind] ?? 0.5;
+      const opTo = DROP_OPACITY[to.kind] ?? 0.5;
+      bOpacity = opFrom + (opTo - opFrom) * eased;
     }
 
-    // Handoff: mostly Phase A while the droplet is still arcing into the
-    // corner, blends to Phase B as the user scrolls past the hero.
+    // Handoff between Phase A and Phase B. A starts wholly in charge during
+    // the hero pinch and arc; once the droplet has reached the corner, B
+    // takes over. They share the corner state at the boundary so the swap
+    // is invisible.
     const handoff = smoothstep(0.85, 1.0, p);
-
     const targetX = aX * (1 - handoff) + bX * handoff;
     const targetY = aY * (1 - handoff) + bY * handoff;
     const targetScaleX = aScale * (1 - handoff) + bScaleX * handoff;
     const targetScaleY = aScale * (1 - handoff) + bScaleY * handoff;
     const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
 
-    targetVec.current.set(targetX, targetY, 0);
-    mesh.current.position.lerp(targetVec.current, lerpK(9, delta));
+    // Position is a deterministic function of scroll → no lerp here. Lerp
+    // would introduce lag and make the motion feel inconsistent; Lenis is
+    // already smoothing scrollY at the source.
+    mesh.current.position.set(targetX, targetY, 0);
 
-    // Velocity-driven squash. Smoothed independently so jitter on the
-    // underlying scroll value doesn't leak into the visible stretch.
-    const dx = mesh.current.position.x - lastPos.current.x;
-    const dy = mesh.current.position.y - lastPos.current.y;
-    const speed = Math.sqrt(dx * dx + dy * dy);
-    lastPos.current.copy(mesh.current.position);
-
-    const targetStretch = Math.min(speed * 3.2, 0.28) * (1 - handoff);
-    stretchSmoothed.current +=
-      (targetStretch - stretchSmoothed.current) * lerpK(6, delta);
-    if (speed > 0.001) {
-      const a = Math.atan2(dy, dx);
-      let diff = a - angleSmoothed.current;
-      if (diff > Math.PI) diff -= 2 * Math.PI;
-      if (diff < -Math.PI) diff += 2 * Math.PI;
-      angleSmoothed.current += diff * lerpK(8, delta);
-    }
-
-    const stretch = stretchSmoothed.current;
-    const angle = angleSmoothed.current;
-    const sx =
-      emerge *
-      targetScaleX *
-      (1 + stretch * Math.abs(Math.cos(angle)));
-    const sy =
-      emerge *
-      targetScaleY *
-      (1 + stretch * Math.abs(Math.sin(angle)));
-    const sz =
-      emerge *
-      ((targetScaleX + targetScaleY) / 2) *
-      (1 - stretch * 0.4);
-
-    const sk = lerpK(10, delta);
-    mesh.current.scale.set(
-      mesh.current.scale.x + (sx - mesh.current.scale.x) * sk,
-      mesh.current.scale.y + (sy - mesh.current.scale.y) * sk,
-      mesh.current.scale.z + (sz - mesh.current.scale.z) * sk,
-    );
+    // Tiny breathing pulse so the droplet never reads as "frozen" while
+    // the user pauses scrolling on a waypoint.
+    const breath = 1 + Math.sin(state.clock.elapsedTime * 1.6) * 0.015;
+    const sx = emerge * targetScaleX * breath;
+    const sy = emerge * targetScaleY * breath;
+    const sz = emerge * ((targetScaleX + targetScaleY) / 2) * breath;
+    mesh.current.scale.set(sx, sy, sz);
 
     m.uniforms.uOpacity.value +=
-      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(8, delta);
+      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
 
-    mesh.current.rotation.y += delta * (0.18 + stretch * 1.2);
+    // Slow continuous spin keeps the surface lively while parked.
+    mesh.current.rotation.y += delta * 0.18;
     mesh.current.rotation.x += delta * 0.08;
+
+    lastPos.current.copy(mesh.current.position);
   });
 
   return (
