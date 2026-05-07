@@ -232,6 +232,18 @@ function HeroBlob() {
   );
 }
 
+/**
+ * Per-`data-drop` opacity so the droplet doesn't drown content. Sections
+ * with a lot of small text get the lowest opacity; CTAs get the loudest.
+ */
+const DROP_OPACITY: Record<string, number> = {
+  portrait: 0.62,
+  description: 0.32,
+  experience: 0.4,
+  project: 0.55,
+  email: 0.7,
+};
+
 function Droplet() {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
@@ -241,6 +253,20 @@ function Droplet() {
   const stretchSmoothed = useRef(0);
   const angleSmoothed = useRef(0);
 
+  // Cache the waypoint elements once per layout. The set rarely changes
+  // mid-session — re-collecting on resize is enough.
+  const waypointsRef = useRef<HTMLElement[]>([]);
+  useEffect(() => {
+    const collect = () => {
+      waypointsRef.current = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-drop]"),
+      );
+    };
+    collect();
+    window.addEventListener("resize", collect);
+    return () => window.removeEventListener("resize", collect);
+  }, []);
+
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
@@ -249,80 +275,124 @@ function Droplet() {
 
     const p = readDropProgress();
 
-    // Parking spot in world space, recomputed each frame so it tracks viewport
-    // resizes without a separate listener.
     const cam = state.camera as THREE.PerspectiveCamera;
     const fovRad = (cam.fov * Math.PI) / 180;
     const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
     const visibleW = visibleH * cam.aspect;
+    const pxPerWorld =
+      typeof window !== "undefined" ? window.innerHeight / visibleH : 1;
+
+    const emerge = smoothstep(0.08, 0.22, p);
+
+    // ─── Phase A — pinch off the hero and arc into the top-right corner.
+    // Quadratic bezier: P0 origin, P1 above-and-right, P2 parking spot.
     const margin = 0.85;
     const parkX = visibleW / 2 - margin;
     const parkY = visibleH / 2 - margin;
-
-    // Three smoothstep'd phases keep the separation feeling consistent at any
-    // scroll speed:
-    //   emerge  0.08..0.22  — droplet grows from inside the hero
-    //   travel  0.10..0.85  — bezier arc from origin to the corner
-    //   settle  0.85..1.00  — droplet hits parked size, calms down
-    const emerge = smoothstep(0.08, 0.22, p);
     const travel = smoothstep(0.1, 0.85, p);
-
-    // Quadratic bezier: P0 origin, P1 control above-and-right (the droplet
-    // rises first before swooping into the corner), P2 parking spot.
     const cx = parkX * 0.35;
     const cy = parkY * 2.4;
     const omt = 1 - travel;
-    const targetX = 2 * omt * travel * cx + travel * travel * parkX;
-    const targetY = 2 * omt * travel * cy + travel * travel * parkY;
+    const aX = 2 * omt * travel * cx + travel * travel * parkX;
+    const aY = 2 * omt * travel * cy + travel * travel * parkY;
+    const bulge = Math.sin(travel * Math.PI) * 0.08;
+    const aScale = 0.4 + bulge;
+    const aOpacity = 1 - 0.45 * travel;
+
+    // ─── Phase B — journey: lock onto the nearest [data-drop] element by
+    // viewport center, scale to fill its bounds, opacity per zone type.
+    let bX = aX;
+    let bY = aY;
+    let bScaleX = aScale;
+    let bScaleY = aScale;
+    let bOpacity = aOpacity;
+
+    const waypoints = waypointsRef.current;
+    if (waypoints.length > 0 && typeof window !== "undefined") {
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      let activeIdx = 0;
+      let closest = Infinity;
+      for (let i = 0; i < waypoints.length; i++) {
+        const r = waypoints[i].getBoundingClientRect();
+        const center = r.top + r.height / 2;
+        const dist = Math.abs(center - vh / 2);
+        if (dist < closest) {
+          closest = dist;
+          activeIdx = i;
+        }
+      }
+
+      const r = waypoints[activeIdx].getBoundingClientRect();
+      const ndcX = ((r.left + r.width / 2) / vw) * 2 - 1;
+      const ndcY = -(((r.top + r.height / 2) / vh) * 2 - 1);
+      bX = (ndcX * visibleW) / 2;
+      bY = (ndcY * visibleH) / 2;
+      // Scale so the rest icosahedron's diameter (2 * 1.4) fits the rect.
+      // Distortion lets the surface bulge slightly beyond the rect edges,
+      // which sells the "water filling the box" feel.
+      bScaleX = r.width / pxPerWorld / 2.8;
+      bScaleY = r.height / pxPerWorld / 2.8;
+      const kind = waypoints[activeIdx].dataset.drop ?? "";
+      bOpacity = DROP_OPACITY[kind] ?? 0.5;
+    }
+
+    // Handoff: mostly Phase A while the droplet is still arcing into the
+    // corner, blends to Phase B as the user scrolls past the hero.
+    const handoff = smoothstep(0.85, 1.0, p);
+
+    const targetX = aX * (1 - handoff) + bX * handoff;
+    const targetY = aY * (1 - handoff) + bY * handoff;
+    const targetScaleX = aScale * (1 - handoff) + bScaleX * handoff;
+    const targetScaleY = aScale * (1 - handoff) + bScaleY * handoff;
+    const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
 
     targetVec.current.set(targetX, targetY, 0);
     mesh.current.position.lerp(targetVec.current, lerpK(9, delta));
 
-    // Velocity (post-lerp) drives a soft stretch along direction of motion.
+    // Velocity-driven squash. Smoothed independently so jitter on the
+    // underlying scroll value doesn't leak into the visible stretch.
     const dx = mesh.current.position.x - lastPos.current.x;
     const dy = mesh.current.position.y - lastPos.current.y;
     const speed = Math.sqrt(dx * dx + dy * dy);
     lastPos.current.copy(mesh.current.position);
 
-    // Smooth speed and angle separately so jitter on the underlying scroll
-    // value doesn't punch through to the visible squash.
-    const targetStretch = Math.min(speed * 3.2, 0.28);
+    const targetStretch = Math.min(speed * 3.2, 0.28) * (1 - handoff);
     stretchSmoothed.current +=
       (targetStretch - stretchSmoothed.current) * lerpK(6, delta);
     if (speed > 0.001) {
       const a = Math.atan2(dy, dx);
-      // Wrap-aware angle smoothing.
       let diff = a - angleSmoothed.current;
       if (diff > Math.PI) diff -= 2 * Math.PI;
       if (diff < -Math.PI) diff += 2 * Math.PI;
       angleSmoothed.current += diff * lerpK(8, delta);
     }
 
-    // Base size with a gentle bulge mid-travel — the droplet pulses while
-    // soaring. Lands at ~0.4 by the time it parks.
-    const bulge = Math.sin(travel * Math.PI) * 0.08;
-    const baseScale = emerge * (0.4 + bulge);
-
-    const angle = angleSmoothed.current;
     const stretch = stretchSmoothed.current;
-    const sx = baseScale * (1 + stretch * Math.abs(Math.cos(angle)));
-    const sy = baseScale * (1 + stretch * Math.abs(Math.sin(angle)));
-    const sz = baseScale * (1 - stretch * 0.4);
+    const angle = angleSmoothed.current;
+    const sx =
+      emerge *
+      targetScaleX *
+      (1 + stretch * Math.abs(Math.cos(angle)));
+    const sy =
+      emerge *
+      targetScaleY *
+      (1 + stretch * Math.abs(Math.sin(angle)));
+    const sz =
+      emerge *
+      ((targetScaleX + targetScaleY) / 2) *
+      (1 - stretch * 0.4);
 
-    const sk = lerpK(12, delta);
+    const sk = lerpK(10, delta);
     mesh.current.scale.set(
       mesh.current.scale.x + (sx - mesh.current.scale.x) * sk,
       mesh.current.scale.y + (sy - mesh.current.scale.y) * sk,
       mesh.current.scale.z + (sz - mesh.current.scale.z) * sk,
     );
 
-    // Visible during travel only, dimmed once parked so the corner orb is a
-    // soft accent rather than competing with content.
-    const targetOpacity = emerge * (1 - 0.45 * travel);
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * lerpK(8, delta);
 
-    // Spin faster than the hero, plus extra spin while in motion.
     mesh.current.rotation.y += delta * (0.18 + stretch * 1.2);
     mesh.current.rotation.x += delta * 0.08;
   });
