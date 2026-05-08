@@ -92,17 +92,17 @@ export function CustomCursor() {
       <div
         ref={dot}
         aria-hidden
-        className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 rounded-full bg-[--color-accent] mix-blend-difference"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 rounded-full bg-(--color-accent) mix-blend-difference"
       />
       <div
         ref={ring}
         aria-hidden
-        className="pointer-events-none fixed left-0 top-0 z-[9998] h-9 w-9 rounded-full border border-[--color-fg] mix-blend-difference flex items-center justify-center"
+        className="pointer-events-none fixed left-0 top-0 z-[9998] h-9 w-9 rounded-full border border-(--color-fg) mix-blend-difference flex items-center justify-center"
         style={{ transition: "border-color 0.3s ease" }}
       >
         <div
           ref={label}
-          className="text-[10px] font-mono uppercase tracking-widest text-[--color-fg] opacity-0 transition-opacity"
+          className="text-[10px] font-mono uppercase tracking-widest text-(--color-fg) opacity-0 transition-opacity"
         />
       </div>
     </>

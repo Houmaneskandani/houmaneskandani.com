@@ -74,7 +74,7 @@ export function Navbar() {
                   href={item.href}
                   strength={0.25}
                   cursorLabel="GO"
-                  className="px-4 py-2 text-sm text-fg hover:text-[--color-accent] transition-colors"
+                  className="px-4 py-2 text-sm text-fg hover:text-(--color-accent) transition-colors"
                 >
                   <span>{item.label}</span>
                 </MagneticButton>
@@ -85,7 +85,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-4 md:flex">
           <span className="text-eyebrow flex items-center gap-2">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[--color-accent] blink" />
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-(--color-accent) blink" />
             <AnimatePresence mode="wait">
               <motion.span
                 key={time}

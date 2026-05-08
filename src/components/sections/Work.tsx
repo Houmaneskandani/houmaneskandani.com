@@ -28,7 +28,7 @@ export function Work() {
         <div className="grid grid-cols-12 gap-x-6 gap-y-6">
           <div className="col-span-12 md:col-span-3">
             <p className="text-eyebrow">
-              <span className="text-[--color-accent]">(02)</span> Selected Work
+              <span className="text-(--color-accent)">(02)</span> Selected Work
             </p>
           </div>
           <div className="col-span-12 md:col-span-9 md:col-start-4">
@@ -43,14 +43,14 @@ export function Work() {
           </div>
         </div>
 
-        <ul className="mt-20 border-t border-[--color-line]">
+        <ul className="mt-20 border-t border-(--color-line)">
           {PROJECTS.map((p, i) => (
             <li
               key={p.id}
               data-drop="project"
               onMouseEnter={() => setHovered(p)}
               onMouseLeave={() => setHovered(null)}
-              className="group relative border-b border-[--color-line]"
+              className="group relative border-b border-(--color-line)"
             >
               <Reveal delay={i * 0.05}>
                 <Link
@@ -66,7 +66,7 @@ export function Work() {
                   </span>
                   <div className="col-span-12 md:col-span-6">
                     <p className="text-eyebrow mb-2 md:hidden">
-                      <span className="text-[--color-accent]">{p.id}</span>
+                      <span className="text-(--color-accent)">{p.id}</span>
                       <span className="opacity-60">
                         {" "}· {p.year} · {p.role}
                       </span>
@@ -79,7 +79,7 @@ export function Work() {
                     {p.tags.slice(0, 3).map((t) => (
                       <span
                         key={t}
-                        className="rounded-full border border-[--color-line] px-3 py-1 text-[11px] uppercase tracking-widest text-[--color-muted]"
+                        className="rounded-full border border-(--color-line) px-3 py-1 text-[11px] uppercase tracking-widest text-(--color-muted)"
                       >
                         {t}
                       </span>
@@ -92,7 +92,7 @@ export function Work() {
 
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-[--color-accent] transition-transform duration-700 group-hover:scale-x-100"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-(--color-accent) transition-transform duration-700 group-hover:scale-x-100"
                   />
                 </Link>
               </Reveal>
@@ -122,7 +122,7 @@ export function Work() {
             <p className="mt-3 text-display text-2xl leading-tight">
               {hovered.title}
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-[--color-muted]">
+            <p className="mt-3 text-sm leading-relaxed text-(--color-muted)">
               {hovered.summary}
             </p>
           </motion.div>

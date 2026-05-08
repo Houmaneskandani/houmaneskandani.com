@@ -6,16 +6,16 @@ import { Marquee } from "@/components/ui/Marquee";
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative w-full overflow-hidden border-t border-[--color-line] bg-[--color-bg-elev]">
-      <Marquee speed={30} className="border-b border-[--color-line] py-8">
+    <footer className="relative w-full overflow-hidden border-t border-(--color-line) bg-(--color-bg-elev)">
+      <Marquee speed={30} className="border-b border-(--color-line) py-8">
         {Array.from({ length: 8 }).map((_, i) => (
           <span
             key={i}
-            className="mx-6 inline-flex items-center gap-6 text-display text-2xl text-[--color-fg]/80 md:text-3xl"
+            className="mx-6 inline-flex items-center gap-6 text-display text-2xl text-(--color-fg)/80 md:text-3xl"
           >
-            <span className="text-[--color-accent]">✺</span>
+            <span className="text-(--color-accent)">✺</span>
             Open to backend & platform roles
-            <span className="text-[--color-accent]">✺</span>
+            <span className="text-(--color-accent)">✺</span>
             {SITE.email}
           </span>
         ))}
@@ -34,7 +34,7 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <a
-                className="hover:text-[--color-accent]"
+                className="hover:text-(--color-accent)"
                 href={SITE.social.github}
               >
                 GitHub ↗
@@ -42,7 +42,7 @@ export function Footer() {
             </li>
             <li>
               <a
-                className="hover:text-[--color-accent]"
+                className="hover:text-(--color-accent)"
                 href={SITE.social.linkedin}
               >
                 LinkedIn ↗
@@ -56,7 +56,7 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <a
-                className="hover:text-[--color-accent]"
+                className="hover:text-(--color-accent)"
                 href={`mailto:${SITE.email}`}
               >
                 {SITE.email}
@@ -65,7 +65,7 @@ export function Footer() {
           </ul>
         </div>
 
-        <div className="col-span-12 mt-6 flex flex-col items-start justify-between gap-3 border-t border-[--color-line] pt-8 text-eyebrow md:flex-row md:items-center">
+        <div className="col-span-12 mt-6 flex flex-col items-start justify-between gap-3 border-t border-(--color-line) pt-8 text-eyebrow md:flex-row md:items-center">
           <span>© {year} {SITE.name}</span>
           <span className="opacity-60">
             Crafted with Next.js, Three.js & GSAP · Hosted on Vercel

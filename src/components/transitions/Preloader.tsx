@@ -52,14 +52,14 @@ export function Preloader() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-          className="pointer-events-none fixed inset-0 z-[200] flex items-center justify-center bg-[--color-bg]"
+          className="pointer-events-none fixed inset-0 z-[200] flex items-center justify-center bg-(--color-bg)"
         >
           <div className="relative">
             {particles.map((p, i) => (
               <motion.span
                 key={i}
                 aria-hidden
-                className="absolute block rounded-full bg-[--color-accent]"
+                className="absolute block rounded-full bg-(--color-accent)"
                 style={{
                   width: p.size,
                   height: p.size,
@@ -92,7 +92,7 @@ export function Preloader() {
                 under the exit transition. */}
             <motion.span
               aria-hidden
-              className="absolute block rounded-full bg-[--color-accent]"
+              className="absolute block rounded-full bg-(--color-accent)"
               style={{
                 width: 14,
                 height: 14,
@@ -111,11 +111,11 @@ export function Preloader() {
           </div>
           {/* Brand stamp at bottom — same editorial tone as the page
               transition curtain, so the entry feels consistent. */}
-          <span className="text-eyebrow absolute bottom-8 left-8 text-[--color-fg]">
-            <span className="text-[--color-accent]">●</span>
+          <span className="text-eyebrow absolute bottom-8 left-8 text-(--color-fg)">
+            <span className="text-(--color-accent)">●</span>
             <span className="ml-2">HOUMAN ESKANDANI</span>
           </span>
-          <span className="text-eyebrow absolute bottom-8 right-8 text-[--color-fg]">
+          <span className="text-eyebrow absolute bottom-8 right-8 text-(--color-fg)">
             PORTFOLIO ↗
           </span>
         </motion.div>
