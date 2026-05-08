@@ -150,6 +150,38 @@ Every PR you push automatically gets its own preview URL — share those with fr
 
 ---
 
+## Maintenance mode
+
+One-click gate that swaps the site for a styled `/maintenance` page. Wired through Vercel Edge Config so toggling does **not** require a redeploy.
+
+### One-time setup
+
+1. Vercel dashboard → **Storage** → **Create Database** → **Edge Config** → name it `portfolio-flags`.
+2. On the Edge Config detail page, click **Connect Project** → pick this project → environment **All**. Vercel auto-injects an `EDGE_CONFIG` env var.
+3. In the Edge Config **Items** tab, add:
+   - Key: `maintenance`
+   - Value: `false`
+4. Trigger one redeploy so the new env var lands.
+
+### Toggling
+
+- **ON** → set `maintenance` = `true` in the Edge Config dashboard.
+- **OFF** → set it back to `false`.
+
+Propagates in seconds. No build, no deploy.
+
+### Local override
+
+To preview the maintenance page without touching Edge Config, add to `.env.local`:
+
+```
+MAINTENANCE_MODE=true
+```
+
+Restart `npm run dev`. The proxy checks the env var first, then falls back to Edge Config. Delete the line to go back to normal.
+
+---
+
 ## Common pitfalls
 
 - **Domain shows "Invalid Configuration" in Vercel for hours.** Cloudflare orange cloud is on. Switch to grey.
