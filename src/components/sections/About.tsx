@@ -26,7 +26,7 @@ export function About() {
       <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-x-6 gap-y-12">
         <div className="col-span-12 md:col-span-3">
           <p className="text-eyebrow">
-            <span className="text-[--color-accent]">(01)</span> About
+            <span className="text-(--color-accent)">(01)</span> About
           </p>
         </div>
 
@@ -43,7 +43,7 @@ export function About() {
             />
             <SplitText
               text="break."
-              className="block text-[--color-accent]"
+              className="block text-(--color-accent)"
               delay={0.1}
             />
           </h2>
@@ -59,18 +59,18 @@ export function About() {
 
             <div data-drop="description" className="col-span-12 md:col-span-8 md:pl-2">
               <Reveal>
-                <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
+                <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   I&apos;m a backend engineer with 5+ years building
                   high-security, multi-tenant APIs — most of that time at
                   IDEMIA, on the card-issuance platform that ships secure
                   card transactions at bank scale for{" "}
-                  <span className="text-[--color-fg]">tier-1 U.S. financial
+                  <span className="text-(--color-fg)">tier-1 U.S. financial
                   institutions</span>.
                 </p>
               </Reveal>
               <Reveal delay={0.07} className="mt-5">
-                <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
-                  Today I&apos;m at <span className="text-[--color-fg]">The
+                <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
+                  Today I&apos;m at <span className="text-(--color-fg)">The
                   Vport</span>, designing the GraphQL platform behind a
                   multi-tenant venue product — JWT auth, deny-by-default
                   RBAC, GKE operations, and the kind of observability that
@@ -78,13 +78,13 @@ export function About() {
                 </p>
               </Reveal>
               <Reveal delay={0.14} className="mt-5">
-                <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
+                <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   On the side I build with AI. Most recently{" "}
                   <a
                     href="https://github.com/Houmaneskandani/ApplyAgent"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[--color-fg] underline decoration-[--color-line] underline-offset-4 transition-colors hover:text-[--color-accent] hover:decoration-[--color-accent]"
+                    className="text-(--color-fg) underline decoration-(--color-line) underline-offset-4 transition-colors hover:text-(--color-accent) hover:decoration-(--color-accent)"
                   >
                     ApplyAgent
                   </a>
@@ -94,7 +94,7 @@ export function About() {
                 </p>
               </Reveal>
               <Reveal delay={0.21} className="mt-5">
-                <p className="text-base leading-relaxed text-[--color-muted] md:text-lg">
+                <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   I obsess over the boring guarantees — idempotency,
                   ordering, durability — because that&apos;s where products
                   live or die at scale.
@@ -104,7 +104,7 @@ export function About() {
           </div>
 
           <Reveal delay={0.18} className="mt-16">
-            <ul className="grid grid-cols-2 gap-y-6 border-t border-[--color-line] pt-8 md:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-y-6 border-t border-(--color-line) pt-8 md:grid-cols-4">
               {[
                 ["5+", "yrs in backend"],
                 ["Bank-scale", "card issuance"],
@@ -122,23 +122,23 @@ export function About() {
           {/* Experience timeline */}
           <Reveal delay={0.22} className="mt-20">
             <p className="text-eyebrow">Experience</p>
-            <ul className="mt-6 divide-y divide-[--color-line] border-y border-[--color-line]">
+            <ul className="mt-6 divide-y divide-(--color-line) border-y border-(--color-line)">
               {EXPERIENCE.map((e) => (
                 <li
                   key={`${e.company}-${e.period}`}
                   data-drop="experience"
                   className="grid grid-cols-12 gap-x-6 py-5"
                 >
-                  <span className="col-span-3 text-sm text-[--color-muted] md:col-span-2">
+                  <span className="col-span-3 text-sm text-(--color-muted) md:col-span-2">
                     {e.period}
                   </span>
-                  <span className="col-span-9 text-sm text-[--color-fg] md:col-span-5">
+                  <span className="col-span-9 text-sm text-(--color-fg) md:col-span-5">
                     {e.role}
                   </span>
-                  <span className="col-span-6 mt-1 text-sm text-[--color-fg] md:col-span-3 md:mt-0">
+                  <span className="col-span-6 mt-1 text-sm text-(--color-fg) md:col-span-3 md:mt-0">
                     {e.company}
                   </span>
-                  <span className="col-span-6 mt-1 text-right text-sm text-[--color-muted] md:col-span-2 md:mt-0">
+                  <span className="col-span-6 mt-1 text-right text-sm text-(--color-muted) md:col-span-2 md:mt-0">
                     {e.location.split(" · ")[0]}
                   </span>
                 </li>
@@ -149,19 +149,19 @@ export function About() {
           {/* Education */}
           <Reveal delay={0.28} className="mt-12">
             <p className="text-eyebrow">Education</p>
-            <ul className="mt-6 divide-y divide-[--color-line] border-y border-[--color-line]">
+            <ul className="mt-6 divide-y divide-(--color-line) border-y border-(--color-line)">
               {EDUCATION.map((e) => (
                 <li
                   key={`${e.school}-${e.period}`}
                   className="grid grid-cols-12 gap-x-6 py-5"
                 >
-                  <span className="col-span-3 text-sm text-[--color-muted] md:col-span-2">
+                  <span className="col-span-3 text-sm text-(--color-muted) md:col-span-2">
                     {e.period}
                   </span>
-                  <span className="col-span-9 text-sm text-[--color-fg] md:col-span-5">
+                  <span className="col-span-9 text-sm text-(--color-fg) md:col-span-5">
                     {e.degree}
                   </span>
-                  <span className="col-span-12 mt-1 text-sm text-[--color-fg] md:col-span-5 md:mt-0">
+                  <span className="col-span-12 mt-1 text-sm text-(--color-fg) md:col-span-5 md:mt-0">
                     {e.school}
                   </span>
                 </li>
@@ -190,7 +190,7 @@ function PhotoSlot() {
   return (
     <div
       ref={wrapRef}
-      className="group relative aspect-[4/5] overflow-hidden rounded-md border border-[--color-line] bg-[--color-bg-elev]"
+      className="group relative aspect-[4/5] overflow-hidden rounded-md border border-(--color-line) bg-(--color-bg-elev)"
     >
       {hasPortrait ? (
         <>
@@ -217,10 +217,10 @@ function PhotoSlot() {
             }}
           />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
-            <span className="text-eyebrow text-[--color-fg]">
+            <span className="text-eyebrow text-(--color-fg)">
               Houman Eskandani
             </span>
-            <span className="text-eyebrow text-[--color-accent]">●</span>
+            <span className="text-eyebrow text-(--color-accent)">●</span>
           </div>
         </>
       ) : (
@@ -235,7 +235,7 @@ function PhotoSlot() {
           />
           <div className="absolute inset-0 flex flex-col items-start justify-end p-5">
             <span className="text-eyebrow">Portrait · TBD</span>
-            <span className="mt-2 text-xs text-[--color-muted]">
+            <span className="mt-2 text-xs text-(--color-muted)">
               Drop a photo at /public/portrait.png
             </span>
           </div>

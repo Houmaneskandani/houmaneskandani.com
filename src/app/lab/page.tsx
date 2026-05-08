@@ -27,11 +27,11 @@ export default function SideProjectsPage() {
               "radial-gradient(60% 60% at 70% 30%, rgba(138,92,255,0.32) 0%, transparent 60%), radial-gradient(40% 40% at 25% 75%, rgba(200,255,0,0.18) 0%, transparent 60%), linear-gradient(135deg, #07070a 0%, #0d0d12 100%)",
           }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[--color-bg]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-(--color-bg)" />
 
         <div className="absolute left-6 top-28 md:left-10">
           <p className="text-eyebrow">
-            <span className="text-[--color-accent]">●</span>{" "}
+            <span className="text-(--color-accent)">●</span>{" "}
             <span className="ml-2">/ SIDE PROJECTS</span>
           </p>
         </div>
@@ -41,13 +41,13 @@ export default function SideProjectsPage() {
             <SplitText text="Things I build" className="block" />
             <SplitText
               text="on my own time."
-              className="block text-[--color-accent]"
+              className="block text-(--color-accent)"
               delay={0.1}
             />
           </h1>
 
           <div className="mt-10 grid grid-cols-12 gap-x-6">
-            <p className="col-span-12 max-w-md text-base leading-relaxed text-[--color-muted] md:col-span-5 md:col-start-7 md:text-lg">
+            <p className="col-span-12 max-w-md text-base leading-relaxed text-(--color-muted) md:col-span-5 md:col-start-7 md:text-lg">
               Most of what I build outside of work is exploratory — small
               tools, AI experiments, things I want to understand by writing
               them. The ones worth showing live here.
@@ -61,15 +61,15 @@ export default function SideProjectsPage() {
         <div className="mx-auto w-full max-w-[1400px]">
           <Reveal>
             <p className="text-eyebrow">
-              <span className="text-[--color-accent]">(02)</span> Currently
+              <span className="text-(--color-accent)">(02)</span> Currently
               shipping
             </p>
           </Reveal>
 
-          <ul className="mt-12 border-t border-[--color-line]">
+          <ul className="mt-12 border-t border-(--color-line)">
             {SIDE_PROJECTS.map((p, i) => (
               <Reveal key={p.id} delay={i * 0.05}>
-                <li className="group relative border-b border-[--color-line]">
+                <li className="group relative border-b border-(--color-line)">
                   <Link
                     href={p.href ?? p.external ?? "#"}
                     target={p.href ? undefined : "_blank"}
@@ -82,7 +82,7 @@ export default function SideProjectsPage() {
                     </span>
                     <div className="col-span-12 md:col-span-7">
                       <p className="text-eyebrow mb-2 md:hidden">
-                        <span className="text-[--color-accent]">{p.id}</span>
+                        <span className="text-(--color-accent)">{p.id}</span>
                         {p.status ? (
                           <span className="opacity-60"> · {p.status}</span>
                         ) : null}
@@ -90,7 +90,7 @@ export default function SideProjectsPage() {
                       <h3 className="text-display text-[2rem] leading-[1.05] transition-transform duration-700 group-hover:translate-x-3 md:text-5xl">
                         {p.name}
                       </h3>
-                      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[--color-muted] md:text-base">
+                      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-(--color-muted) md:text-base">
                         {p.description}
                       </p>
                     </div>
@@ -98,7 +98,7 @@ export default function SideProjectsPage() {
                       {p.tag.split(" · ").map((t) => (
                         <span
                           key={t}
-                          className="rounded-full border border-[--color-line] px-3 py-1 text-[11px] uppercase tracking-widest text-[--color-muted]"
+                          className="rounded-full border border-(--color-line) px-3 py-1 text-[11px] uppercase tracking-widest text-(--color-muted)"
                         >
                           {t}
                         </span>
@@ -110,7 +110,7 @@ export default function SideProjectsPage() {
 
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-[--color-accent] transition-transform duration-700 group-hover:scale-x-100"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-(--color-accent) transition-transform duration-700 group-hover:scale-x-100"
                     />
                   </Link>
                 </li>
@@ -121,12 +121,12 @@ export default function SideProjectsPage() {
       </section>
 
       <section className="relative w-full px-6 pb-24 md:px-10 md:pb-32">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 border-t border-[--color-line] pt-10 md:flex-row md:items-end md:justify-between">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 border-t border-(--color-line) pt-10 md:flex-row md:items-end md:justify-between">
           <p className="text-eyebrow">More on the way</p>
           <Link
             href="/"
             data-cursor="HOME"
-            className="text-display text-3xl leading-tight transition-colors hover:text-[--color-accent] md:text-5xl"
+            className="text-display text-3xl leading-tight transition-colors hover:text-(--color-accent) md:text-5xl"
           >
             ← Back home
           </Link>

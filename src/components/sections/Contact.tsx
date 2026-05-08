@@ -31,7 +31,7 @@ function CopyBurst({ burst }: { burst: Burst }) {
       {particles.map((p, i) => (
         <motion.span
           key={i}
-          className="absolute block rounded-full bg-[--color-accent]"
+          className="absolute block rounded-full bg-(--color-accent)"
           style={{
             width: p.size,
             height: p.size,
@@ -87,7 +87,7 @@ export function Contact() {
     >
       <div className="mx-auto w-full max-w-[1400px]">
         <p className="text-eyebrow mb-12">
-          <span className="text-[--color-accent]">(04)</span> Contact
+          <span className="text-(--color-accent)">(04)</span> Contact
         </p>
 
         <motion.div style={{ scale, opacity }} className="origin-left">
@@ -95,7 +95,7 @@ export function Contact() {
             <SplitText text="Hiring a" className="block" />
             <SplitText
               text="backend engineer?"
-              className="block text-[--color-accent]"
+              className="block text-(--color-accent)"
               delay={0.05}
             />
             <SplitText
@@ -134,14 +134,14 @@ export function Contact() {
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
-                    className="ml-3 inline-block align-middle text-eyebrow text-[--color-accent]"
+                    className="ml-3 inline-block align-middle text-eyebrow text-(--color-accent)"
                   >
                     ✓ COPIED
                   </motion.span>
                 ) : null}
               </AnimatePresence>
             </div>
-            <p className="mt-4 max-w-md text-sm text-[--color-muted]">
+            <p className="mt-4 max-w-md text-sm text-(--color-muted)">
               Click to copy. Or grab the one-page CV below.
             </p>
 
@@ -149,7 +149,7 @@ export function Contact() {
               <MagneticButton
                 href={SITE.resume}
                 cursorLabel="DOWNLOAD"
-                className="rounded-full border border-[--color-accent] bg-[--color-accent]/10 px-6 py-3 text-sm text-[--color-accent] transition-colors hover:bg-[--color-accent] hover:text-bg"
+                className="rounded-full border border-(--color-accent) bg-(--color-accent)/10 px-6 py-3 text-sm text-(--color-accent) transition-colors hover:bg-(--color-accent) hover:text-bg"
               >
                 <span className="inline-flex items-center gap-2">
                   Download CV <span aria-hidden>↓</span>
@@ -170,14 +170,14 @@ export function Contact() {
                   key={s.label}
                   href={s.href}
                   cursorLabel="VISIT"
-                  className="rounded-full border border-[--color-line] px-6 py-3 text-sm transition-colors hover:border-[--color-accent] hover:text-[--color-accent]"
+                  className="rounded-full border border-(--color-line) px-6 py-3 text-sm transition-colors hover:border-(--color-accent) hover:text-(--color-accent)"
                 >
                   {s.label}
                   <span className="ml-2">↗</span>
                 </MagneticButton>
               ))}
             </div>
-            <p className="mt-6 max-w-xs text-right text-xs text-[--color-muted]">
+            <p className="mt-6 max-w-xs text-right text-xs text-(--color-muted)">
               Based in {SITE.location}. Open to remote, hybrid, or on-site
               backend / platform roles.
             </p>

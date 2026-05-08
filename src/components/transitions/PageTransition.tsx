@@ -79,13 +79,13 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
                 "%, rgba(138,92,255,0.45) 0%, rgba(13,13,18,0.98) 55%, var(--color-bg-elev) 100%)",
             }}
           >
-            <span className="text-eyebrow text-[--color-fg]">
-              <span className="text-[--color-accent]">●</span>
+            <span className="text-eyebrow text-(--color-fg)">
+              <span className="text-(--color-accent)">●</span>
               <span className="ml-2">
                 {pathname === "/" ? "HOME" : pathname.toUpperCase()}
               </span>
             </span>
-            <span className="text-eyebrow text-[--color-fg]">PORTFOLIO ↗</span>
+            <span className="text-eyebrow text-(--color-fg)">PORTFOLIO ↗</span>
           </motion.div>
         ) : null}
       </AnimatePresence>

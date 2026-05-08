@@ -22,16 +22,16 @@ export function Capabilities() {
   return (
     <section
       id="capabilities"
-      className="relative w-full overflow-hidden border-t border-[--color-line] py-24 md:py-36"
+      className="relative w-full overflow-hidden border-t border-(--color-line) py-24 md:py-36"
     >
       <Marquee speed={60} className="mb-24 md:mb-32">
         {MARQUEE_ITEMS.map((t, i) => (
           <span
             key={`${t}-${i}`}
-            className="mx-8 inline-flex items-center gap-8 text-display text-[12vw] leading-none text-[--color-fg]/95 md:text-[8vw]"
+            className="mx-8 inline-flex items-center gap-8 text-display text-[12vw] leading-none text-(--color-fg)/95 md:text-[8vw]"
           >
             {t}
-            <span className="text-[--color-accent]">✺</span>
+            <span className="text-(--color-accent)">✺</span>
           </span>
         ))}
       </Marquee>
@@ -40,7 +40,7 @@ export function Capabilities() {
         <div className="grid grid-cols-12 gap-x-6 gap-y-12">
           <div className="col-span-12 md:col-span-3">
             <p className="text-eyebrow">
-              <span className="text-[--color-accent]">(03)</span> Capabilities
+              <span className="text-(--color-accent)">(03)</span> Capabilities
             </p>
           </div>
           <div className="col-span-12 md:col-span-9 md:col-start-4">
@@ -56,17 +56,17 @@ export function Capabilities() {
             <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
               {CAPABILITIES.map((cap, i) => (
                 <Reveal key={cap.label} delay={i * 0.07}>
-                  <div data-drop="capability" className="border-t border-[--color-line] pt-6">
-                    <p className="text-eyebrow text-[--color-fg]">
+                  <div data-drop="capability" className="border-t border-(--color-line) pt-6">
+                    <p className="text-eyebrow text-(--color-fg)">
                       0{i + 1} · {cap.label}
                     </p>
-                    <ul className="mt-5 space-y-2 text-sm text-[--color-muted] md:text-base">
+                    <ul className="mt-5 space-y-2 text-sm text-(--color-muted) md:text-base">
                       {cap.items.map((item) => (
                         <li
                           key={item}
-                          className="flex items-baseline gap-2 transition-colors hover:text-[--color-fg]"
+                          className="flex items-baseline gap-2 transition-colors hover:text-(--color-fg)"
                         >
-                          <span className="text-[--color-accent]">→</span>
+                          <span className="text-(--color-accent)">→</span>
                           <span>{item}</span>
                         </li>
                       ))}

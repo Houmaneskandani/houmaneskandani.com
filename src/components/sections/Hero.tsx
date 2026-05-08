@@ -10,11 +10,11 @@ export function Hero() {
       id="top"
       className="relative isolate flex min-h-[100svh] w-full flex-col justify-end overflow-hidden px-6 pb-12 pt-32 md:px-10"
     >
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[--color-bg]" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-(--color-bg)" />
 
       <div className="pointer-events-none absolute left-6 top-28 md:left-10">
         <p className="text-eyebrow">
-          <span className="text-[--color-accent]">●</span>{" "}
+          <span className="text-(--color-accent)">●</span>{" "}
           <span className="ml-2">
             IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES
           </span>
@@ -46,7 +46,7 @@ export function Hero() {
             />
             <SplitText
               text="Backend engineer."
-              className="block text-[--color-accent]"
+              className="block text-(--color-accent)"
               delay={0.25}
             />
             <SplitText
@@ -64,7 +64,7 @@ export function Hero() {
             transition={{ duration: 1, delay: 1.0 }}
             className="col-span-12 md:col-span-5 md:col-start-7"
           >
-            <p className="max-w-md text-base leading-relaxed text-[--color-muted] md:text-lg">
+            <p className="max-w-md text-base leading-relaxed text-(--color-muted) md:text-lg">
               {SITE.tagline}
             </p>
           </motion.div>
@@ -81,13 +81,13 @@ export function Hero() {
               className="group inline-flex flex-col gap-2"
             >
               <span className="text-eyebrow">Scroll</span>
-              <span className="relative block h-12 w-px overflow-hidden bg-[--color-line]">
-                <span className="absolute inset-x-0 -top-full block h-full bg-[--color-accent] [animation:scroll-cue_2.4s_var(--ease-expo-out)_infinite]" />
+              <span className="relative block h-12 w-px overflow-hidden bg-(--color-line)">
+                <span className="absolute inset-x-0 -top-full block h-full bg-(--color-accent) [animation:scroll-cue_2.4s_var(--ease-expo-out)_infinite]" />
               </span>
             </a>
             <div className="hidden text-right text-eyebrow md:block">
               <p className="opacity-60">Currently at</p>
-              <p className="mt-1 text-[--color-fg]">
+              <p className="mt-1 text-(--color-fg)">
                 The Vport · IDEMIA before that
               </p>
             </div>

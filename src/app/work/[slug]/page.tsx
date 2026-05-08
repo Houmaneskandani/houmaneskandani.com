@@ -51,11 +51,11 @@ export default async function ProjectPage({
         <div className="absolute inset-0 -z-10">
           <ProjectHero accent={project.accent} />
         </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-[--color-bg]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-transparent to-(--color-bg)" />
 
         <div className="absolute left-6 top-28 md:left-10">
           <p className="text-eyebrow">
-            <span className="text-[--color-accent]">●</span>{" "}
+            <span className="text-(--color-accent)">●</span>{" "}
             <span className="ml-2">CASE STUDY · {project.id}</span>
           </p>
         </div>
@@ -67,7 +67,7 @@ export default async function ProjectPage({
 
           {project.client ? (
             <p className="mt-4 text-eyebrow">
-              <span className="text-[--color-fg]">Client · </span>
+              <span className="text-(--color-fg)">Client · </span>
               <span>{project.client}</span>
             </p>
           ) : null}
@@ -87,7 +87,7 @@ export default async function ProjectPage({
                 {project.tags.map((t) => (
                   <li
                     key={t}
-                    className="rounded-full border border-[--color-line] px-3 py-1 text-[11px] uppercase tracking-widest text-[--color-muted]"
+                    className="rounded-full border border-(--color-line) px-3 py-1 text-[11px] uppercase tracking-widest text-(--color-muted)"
                   >
                     {t}
                   </li>
@@ -101,7 +101,7 @@ export default async function ProjectPage({
                   target="_blank"
                   rel="noreferrer"
                   data-cursor="VISIT"
-                  className="inline-flex items-center gap-2 rounded-full border border-[--color-accent] bg-[--color-accent]/10 px-5 py-2 text-sm text-[--color-accent] transition-colors hover:bg-[--color-accent] hover:text-bg"
+                  className="inline-flex items-center gap-2 rounded-full border border-(--color-accent) bg-(--color-accent)/10 px-5 py-2 text-sm text-(--color-accent) transition-colors hover:bg-(--color-accent) hover:text-bg"
                 >
                   Visit repository <span aria-hidden>↗</span>
                 </a>
@@ -116,7 +116,7 @@ export default async function ProjectPage({
         <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-x-6 gap-y-10">
           <div className="col-span-12 md:col-span-3">
             <p className="text-eyebrow">
-              <span className="text-[--color-accent]">(01)</span> Context
+              <span className="text-(--color-accent)">(01)</span> Context
             </p>
           </div>
           <div className="col-span-12 md:col-span-9 md:col-start-4">
@@ -127,7 +127,7 @@ export default async function ProjectPage({
             </Reveal>
             <Reveal delay={0.1} className="mt-12">
               <p className="text-eyebrow">The problem</p>
-              <p className="mt-3 max-w-3xl text-base leading-relaxed text-[--color-muted] md:text-lg">
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-(--color-muted) md:text-lg">
                 {project.problem}
               </p>
             </Reveal>
@@ -136,11 +136,11 @@ export default async function ProjectPage({
       </section>
 
       {/* Approach — pinned-feel split layout */}
-      <section className="relative w-full border-t border-[--color-line] px-6 py-32 md:px-10 md:py-40">
+      <section className="relative w-full border-t border-(--color-line) px-6 py-32 md:px-10 md:py-40">
         <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-x-6">
           <div className="col-span-12 md:col-span-3">
             <p className="text-eyebrow sticky top-32">
-              <span className="text-[--color-accent]">(02)</span> Approach
+              <span className="text-(--color-accent)">(02)</span> Approach
             </p>
           </div>
           <div className="col-span-12 md:col-span-9 md:col-start-4">
@@ -152,7 +152,7 @@ export default async function ProjectPage({
                     <h3 className="mt-3 text-display text-3xl leading-tight md:text-5xl">
                       {step.heading}
                     </h3>
-                    <p className="mt-5 max-w-3xl text-base leading-relaxed text-[--color-muted] md:text-lg">
+                    <p className="mt-5 max-w-3xl text-base leading-relaxed text-(--color-muted) md:text-lg">
                       {step.body}
                     </p>
                   </Reveal>
@@ -164,11 +164,11 @@ export default async function ProjectPage({
       </section>
 
       {/* Outcome + metrics */}
-      <section className="relative w-full border-t border-[--color-line] px-6 py-32 md:px-10 md:py-40">
+      <section className="relative w-full border-t border-(--color-line) px-6 py-32 md:px-10 md:py-40">
         <div className="mx-auto grid w-full max-w-[1400px] grid-cols-12 gap-x-6 gap-y-10">
           <div className="col-span-12 md:col-span-3">
             <p className="text-eyebrow">
-              <span className="text-[--color-accent]">(03)</span> Outcome
+              <span className="text-(--color-accent)">(03)</span> Outcome
             </p>
           </div>
           <div className="col-span-12 md:col-span-9 md:col-start-4">
@@ -179,7 +179,7 @@ export default async function ProjectPage({
             </Reveal>
             {project.metrics ? (
               <Reveal delay={0.1} className="mt-16">
-                <ul className="grid grid-cols-1 gap-y-8 border-t border-[--color-line] pt-8 md:grid-cols-3 md:gap-x-6">
+                <ul className="grid grid-cols-1 gap-y-8 border-t border-(--color-line) pt-8 md:grid-cols-3 md:gap-x-6">
                   {project.metrics.map((m) => (
                     <li key={m.label}>
                       <p
@@ -199,7 +199,7 @@ export default async function ProjectPage({
       </section>
 
       {/* Next project */}
-      <section className="relative w-full border-t border-[--color-line] px-6 py-24 md:px-10 md:py-32">
+      <section className="relative w-full border-t border-(--color-line) px-6 py-24 md:px-10 md:py-32">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-eyebrow">Next case</p>
@@ -214,7 +214,7 @@ export default async function ProjectPage({
           <Link
             href="/#work"
             data-cursor="BACK"
-            className="text-eyebrow hover:text-[--color-accent]"
+            className="text-eyebrow hover:text-(--color-accent)"
           >
             All work ↗
           </Link>
