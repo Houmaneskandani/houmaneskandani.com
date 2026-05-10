@@ -31,6 +31,14 @@ const vertexShader = /* glsl */ `
   uniform float uRipple;
   uniform float uClickStrength;
   uniform vec2 uMouse;
+  // Per-section shape morph. uStretch scales the sphere along x/y/z BEFORE
+  // displacement, so the silhouette itself elongates / compresses (a true
+  // shape change, not a scale). uNoiseFreq scales the Perlin sample
+  // frequency — higher = busier, spikier surface. uNoiseAmp scales the
+  // total displacement amplitude on top of uDistortion.
+  uniform vec3 uStretch;
+  uniform float uNoiseFreq;
+  uniform float uNoiseAmp;
 
   varying vec3 vNormal;
   varying vec3 vPos;
@@ -96,13 +104,20 @@ const vertexShader = /* glsl */ `
   }
 
   void main() {
-    vec3 pos = position;
+    // Per-section silhouette stretch: scale the base sphere position before
+    // displacement so each section's "shape mood" reads as a true change in
+    // form (elongated streak in Work, faceted spike-ball in Capabilities,
+    // gathered pearl in About) rather than just a scale change.
+    vec3 pos = position * uStretch;
     // Faster overall time + three noise scales = boiling water surface:
     // slow large-scale convection, medium turbulence, and fast micro-bubbles.
+    // uNoiseFreq scales the frequencies together so the surface stays
+    // multi-octave but moves through "calm" → "spiky" per section.
     float t = uTime * 0.55;
-    float n = cnoise(normal * 1.4 + vec3(t * 0.8, t * 0.6, -t * 0.5));
-    float n2 = cnoise(normal * 3.0 + vec3(-t * 1.6, t * 1.9, t * 1.1));
-    float n3 = cnoise(normal * 5.5 + vec3(t * 2.6, -t * 2.1, t * 2.3));
+    float nf = uNoiseFreq;
+    float n = cnoise(normal * (1.4 * nf) + vec3(t * 0.8, t * 0.6, -t * 0.5));
+    float n2 = cnoise(normal * (3.0 * nf) + vec3(-t * 1.6, t * 1.9, t * 1.1));
+    float n3 = cnoise(normal * (5.5 * nf) + vec3(t * 2.6, -t * 2.1, t * 2.3));
     // Cursor ripple: push the sphere outward where the cursor is "near" in xy.
     vec2 mDir = uMouse - normal.xy;
     float mDist = length(mDir);
@@ -112,7 +127,8 @@ const vertexShader = /* glsl */ `
     // exponentially after each click. Reads as a tap on the surface.
     float shock = sin(mDist * 5.0 - uTime * 8.0) * exp(-mDist * 1.4)
       * uClickStrength * 0.5;
-    float displacement = (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion
+    float displacement =
+      (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion * uNoiseAmp
       + ripple * uRipple + shock;
     pos += normal * displacement;
     pos.xy += uMouse * 0.08;
@@ -159,6 +175,11 @@ function makeBlobUniforms(distortion: number, ripple: number, opacity: number) {
     uColorA: { value: new THREE.Color("#0a0a12") },
     uColorB: { value: new THREE.Color("#8a5cff") },
     uColorC: { value: new THREE.Color("#c8ff00") },
+    // Shape morph defaults — neutral organic sphere. Per-section targets
+    // overwrite these via JS lerping in the Droplet useFrame.
+    uStretch: { value: new THREE.Vector3(1, 1, 1) },
+    uNoiseFreq: { value: 1 },
+    uNoiseAmp: { value: 1 },
   };
 }
 
@@ -360,6 +381,26 @@ const SECTION_MOOD: Record<string, [string, string]> = {
   contact: ["#c8ff00", "#8a5cff"],
 };
 
+/**
+ * Per-section shape mood — the droplet's actual silhouette morphs as you
+ * scroll through the page, not just its color. Each entry is
+ * [stretchX, stretchY, stretchZ, noiseFreq, noiseAmp]:
+ *
+ * - top         organic baseline (matches the hero blob's shape)
+ * - about       compact pearl — slight vertical lean, calmer surface
+ * - work        horizontal streak — wide and elongated, more turbulent
+ * - capabilities spike-ball — tight stretch but high-frequency, high-amp
+ *                noise so the surface reads as crystalline / faceted
+ * - contact     alive — bigger, brighter surface activity at the finale
+ */
+const SECTION_SHAPE: Record<string, [number, number, number, number, number]> = {
+  top:          [1.0, 1.0, 1.0, 1.0, 1.0],
+  about:        [0.9, 1.1, 0.9, 0.7, 0.8],
+  work:         [1.55, 0.7, 0.9, 1.2, 1.05],
+  capabilities: [1.0, 1.0, 1.0, 2.2, 1.4],
+  contact:      [1.1, 1.1, 1.1, 1.1, 1.3],
+};
+
 const SECTION_IDS = ["top", "about", "work", "capabilities", "contact"];
 
 /**
@@ -446,6 +487,12 @@ function Droplet() {
     window.addEventListener("resize", collect);
     return () => window.removeEventListener("resize", collect);
   }, []);
+
+  // Last detected section — used to fire a one-shot "transition pulse" each
+  // time the user crosses into a new section, so the shape morph feels
+  // beat-driven (small burst → settle into the new shape) rather than a
+  // silent slow lerp.
+  const lastSectionRef = useRef<string>("top");
 
   // Idle tracking: any scroll, pointer move, or keypress resets the timer.
   // After the threshold, the droplet quietly grows + drifts in a slow loop
@@ -592,8 +639,11 @@ function Droplet() {
       (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
 
     // Section mood — find which section's vertical center is closest to
-    // viewport center and lerp the surface palette toward that section's
-    // colors. Slow lerp (rate 1) so transitions feel ambient, not flicker.
+    // viewport center and lerp the surface palette + silhouette toward
+    // that section's targets. Slow lerp (rate 1.2) so transitions feel
+    // ambient. On crossing into a new section we fire a one-shot pulse
+    // (reusing uClickStrength) so the shape change reads as a beat, not
+    // a slow drift.
     const sections = sectionsRef.current;
     if (sections.length > 0) {
       const center = scrollY + vh / 2;
@@ -610,6 +660,28 @@ function Droplet() {
       const colorK = lerpK(1.2, delta);
       m.uniforms.uColorB.value.lerp(tColor, colorK);
       m.uniforms.uColorC.value.lerp(cColor, colorK);
+
+      // Per-section silhouette morph. Same lerp rate as color so shape
+      // and palette move together.
+      const shape = SECTION_SHAPE[activeId] ?? SECTION_SHAPE.top;
+      const stretchTarget = new THREE.Vector3(shape[0], shape[1], shape[2]);
+      const shapeK = lerpK(1.4, delta);
+      m.uniforms.uStretch.value.lerp(stretchTarget, shapeK);
+      m.uniforms.uNoiseFreq.value +=
+        (shape[3] - m.uniforms.uNoiseFreq.value) * shapeK;
+      m.uniforms.uNoiseAmp.value +=
+        (shape[4] - m.uniforms.uNoiseAmp.value) * shapeK;
+
+      // Pulse on section change — bumps the click-shockwave amplitude so
+      // the surface ripples briefly as the new shape settles in. The
+      // existing exponential decay handles the fade-out.
+      if (activeId !== lastSectionRef.current) {
+        lastSectionRef.current = activeId;
+        m.uniforms.uClickStrength.value = Math.max(
+          m.uniforms.uClickStrength.value,
+          0.85,
+        );
+      }
     }
 
     // Continuous slow spin keeps the surface alive even when the droplet
