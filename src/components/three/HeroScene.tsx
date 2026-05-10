@@ -315,12 +315,21 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
  * along without overlapping the reading column). The blob fades out
  * during the middle of the page and re-blooms at the bottom.
  */
-function HeroBlob({ isMobile }: { isMobile: boolean }) {
+function HeroBlob({
+  isMobile,
+  lensRef,
+}: {
+  isMobile: boolean;
+  lensRef?: React.RefObject<HTMLDivElement | null>;
+}) {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
   useClickShock(mesh);
   useEasterEgg();
+  // Reusable scratch vector for projecting world → screen each frame
+  // (avoids allocating a new Vector3 inside useFrame).
+  const projectedRef = useRef(new THREE.Vector3());
 
   // Per-section bounds — same structure the old Droplet used. Cached on
   // resize since layout can shift section offsets.
@@ -498,12 +507,14 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
     mesh.current.scale.set(ns * (1 + pinch * 0.6), ns * (1 - pinch), ns);
 
     // ─── Opacity ────────────────────────────────────────────────────────
-    // Desktop stays nearly opaque end-to-end (slight dim during the drift
-    // so it sits comfortably under content). Mobile fully fades out
-    // mid-page so it doesn't overlap reading.
+    // Desktop opacity drops mid-page so the sibling lens div's
+    // backdrop-filter blur shows through the blob — visitor sees blob
+    // color over a refracted view of the text underneath, instead of an
+    // opaque shape. Hero/contact (centered) stay nearly fully opaque.
+    // Mobile fully fades out mid-page so it doesn't overlap reading.
     const targetOpacity = isMobile
       ? Math.max(centerness, 0)
-      : Math.max(centerness, 0.78);
+      : Math.max(centerness, 0.42);
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * k;
 
@@ -573,6 +584,35 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
     // parked at hero or hovering on a journey waypoint mid-scroll.
     mesh.current.rotation.y += delta * 0.08;
     mesh.current.rotation.x += delta * 0.03;
+
+    // ─── Lens overlay (DOM div with backdrop-filter) ────────────────────
+    // Project the mesh's world position into screen pixels, then write it
+    // to the sibling lens div via ref so the CSS backdrop-filter blur
+    // tracks the blob in real time. Imperative update — no React renders
+    // per frame. Hidden when the blob is too small or too transparent to
+    // earn the visual cost of a backdrop-blur layer.
+    const lensEl = lensRef?.current;
+    if (lensEl) {
+      const v = projectedRef.current;
+      v.set(
+        mesh.current.position.x,
+        mesh.current.position.y,
+        mesh.current.position.z,
+      );
+      v.project(state.camera);
+      const sw = state.size.width;
+      const sh = state.size.height;
+      const screenX = (v.x * 0.5 + 0.5) * sw;
+      const screenY = (-v.y * 0.5 + 0.5) * sh;
+      // Lens scale tracks blob scale × a multiplier so the lens visibly
+      // extends a bit past the blob's silhouette (refraction halo).
+      const blobScale = mesh.current.scale.y;
+      const lensScale = blobScale * 1.45;
+      const opacityVal = m.uniforms.uOpacity.value;
+      const showLens = blobScale > 0.12 && opacityVal > 0.35 ? 1 : 0;
+      lensEl.style.transform = `translate3d(${screenX}px, ${screenY}px, 0) scale(${lensScale})`;
+      lensEl.style.opacity = String(showLens);
+    }
   });
 
   return (
@@ -740,7 +780,11 @@ function Particles({ count = 600 }: { count?: number }) {
   );
 }
 
-export function HeroScene() {
+export function HeroScene({
+  lensRef,
+}: {
+  lensRef?: React.RefObject<HTMLDivElement | null>;
+}) {
   const [mounted, setMounted] = useState(false);
   const reduced = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -787,7 +831,7 @@ export function HeroScene() {
             the hero, shrinks + drifts along the journey path while morphing
             per section, then re-blooms centered at the bottom. Replaces the
             previous "pinch off into a separate droplet" architecture. */}
-        <HeroBlob isMobile={isMobile} />
+        <HeroBlob isMobile={isMobile} lensRef={lensRef} />
         {/* Particle cloud is desktop-only — fades out fast and doesn't add
             much value on a narrow viewport. */}
         {!isMobile && <Particles />}
