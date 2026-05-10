@@ -31,6 +31,14 @@ const vertexShader = /* glsl */ `
   uniform float uRipple;
   uniform float uClickStrength;
   uniform vec2 uMouse;
+  // Per-section shape morph. uStretch scales the sphere along x/y/z BEFORE
+  // displacement, so the silhouette itself elongates / compresses (a true
+  // shape change, not a scale). uNoiseFreq scales the Perlin sample
+  // frequency — higher = busier, spikier surface. uNoiseAmp scales the
+  // total displacement amplitude on top of uDistortion.
+  uniform vec3 uStretch;
+  uniform float uNoiseFreq;
+  uniform float uNoiseAmp;
 
   varying vec3 vNormal;
   varying vec3 vPos;
@@ -96,13 +104,20 @@ const vertexShader = /* glsl */ `
   }
 
   void main() {
-    vec3 pos = position;
+    // Per-section silhouette stretch: scale the base sphere position before
+    // displacement so each section's "shape mood" reads as a true change in
+    // form (elongated streak in Work, faceted spike-ball in Capabilities,
+    // gathered pearl in About) rather than just a scale change.
+    vec3 pos = position * uStretch;
     // Faster overall time + three noise scales = boiling water surface:
     // slow large-scale convection, medium turbulence, and fast micro-bubbles.
+    // uNoiseFreq scales the frequencies together so the surface stays
+    // multi-octave but moves through "calm" → "spiky" per section.
     float t = uTime * 0.55;
-    float n = cnoise(normal * 1.4 + vec3(t * 0.8, t * 0.6, -t * 0.5));
-    float n2 = cnoise(normal * 3.0 + vec3(-t * 1.6, t * 1.9, t * 1.1));
-    float n3 = cnoise(normal * 5.5 + vec3(t * 2.6, -t * 2.1, t * 2.3));
+    float nf = uNoiseFreq;
+    float n = cnoise(normal * (1.4 * nf) + vec3(t * 0.8, t * 0.6, -t * 0.5));
+    float n2 = cnoise(normal * (3.0 * nf) + vec3(-t * 1.6, t * 1.9, t * 1.1));
+    float n3 = cnoise(normal * (5.5 * nf) + vec3(t * 2.6, -t * 2.1, t * 2.3));
     // Cursor ripple: push the sphere outward where the cursor is "near" in xy.
     vec2 mDir = uMouse - normal.xy;
     float mDist = length(mDir);
@@ -112,7 +127,8 @@ const vertexShader = /* glsl */ `
     // exponentially after each click. Reads as a tap on the surface.
     float shock = sin(mDist * 5.0 - uTime * 8.0) * exp(-mDist * 1.4)
       * uClickStrength * 0.5;
-    float displacement = (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion
+    float displacement =
+      (n * 0.5 + n2 * 0.35 + n3 * 0.18) * uDistortion * uNoiseAmp
       + ripple * uRipple + shock;
     pos += normal * displacement;
     pos.xy += uMouse * 0.08;
@@ -159,6 +175,11 @@ function makeBlobUniforms(distortion: number, ripple: number, opacity: number) {
     uColorA: { value: new THREE.Color("#0a0a12") },
     uColorB: { value: new THREE.Color("#8a5cff") },
     uColorC: { value: new THREE.Color("#c8ff00") },
+    // Shape morph defaults — neutral organic sphere. Per-section targets
+    // overwrite these via JS lerping in the Droplet useFrame.
+    uStretch: { value: new THREE.Vector3(1, 1, 1) },
+    uNoiseFreq: { value: 1 },
+    uNoiseAmp: { value: 1 },
   };
 }
 
@@ -278,12 +299,52 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-function HeroBlob() {
+/**
+ * The whole homepage backdrop, in one continuously evolving shape.
+ *
+ * On scroll the hero shrinks, drifts to the corners along a Catmull-Rom
+ * journey path, and morphs its silhouette + palette per section as the
+ * user reads. At the bottom of the page it blooms back to its opening
+ * pose — same shape, same place, full size — bookending the journey.
+ *
+ * Replaces the previous "pinch off into a separate Droplet" architecture.
+ * One shape, one journey, five forms — easier to read as a single
+ * narrative element rather than two parallel actors.
+ *
+ * On mobile the journey portion is skipped (no edge real estate to drift
+ * along without overlapping the reading column). The blob fades out
+ * during the middle of the page and re-blooms at the bottom.
+ */
+function HeroBlob({ isMobile }: { isMobile: boolean }) {
   const mesh = useRef<THREE.Mesh>(null);
   const mouse = useSharedMouse();
   const uniforms = useMemo(() => makeBlobUniforms(0.6, 0.18, 1), []);
   useClickShock(mesh);
   useEasterEgg();
+
+  // Per-section bounds — same structure the old Droplet used. Cached on
+  // resize since layout can shift section offsets.
+  const sectionsRef = useRef<Array<{ id: string; top: number; bottom: number }>>(
+    [],
+  );
+  useEffect(() => {
+    const collect = () => {
+      sectionsRef.current = SECTION_IDS.map((id) => {
+        const el = document.getElementById(id);
+        const top = el?.offsetTop ?? 0;
+        const height = el?.offsetHeight ?? 0;
+        return { id, top, bottom: top + height };
+      });
+    };
+    collect();
+    window.addEventListener("resize", collect);
+    return () => window.removeEventListener("resize", collect);
+  }, []);
+
+  // Last detected section — drives the one-shot pulse that fires when the
+  // user crosses into a new section, so each shape change reads as a beat
+  // rather than a silent slow lerp.
+  const lastSectionRef = useRef<string>("top");
 
   useFrame((state, delta) => {
     if (!mesh.current) return;
@@ -295,42 +356,136 @@ function HeroBlob() {
     // Easter egg: typed "houman" → spike distortion + click strength so the
     // blob bursts and recovers over ~2.5s.
     const egg = eggIntensity();
-    m.uniforms.uDistortion.value = 0.6 + egg * 1.4;
     m.uniforms.uClickStrength.value = Math.max(
       m.uniforms.uClickStrength.value,
       egg,
     );
 
     const p = readDropProgress();
-
-    // Phase 1 — pinch (0..0.15): hero builds tension as if surface tension
-    // is bunching up before releasing the droplet.
-    const pinch = Math.sin(smoothstep(0, 0.15, p) * Math.PI) * 0.07;
-
-    // Phase 2 — fast collapse (0.15..0.28): once the droplet has pinched
-    // off, the hero rapidly contracts to nothing. Tightened so the hero is
-    // fully gone by 0.28 — the droplet doesn't start emerging until 0.30
-    // (see Droplet.emerge), so the two never overlap on screen.
-    const fade = smoothstep(0.15, 0.28, p);
-
-    // Phase 3 — at the very bottom of the page the hero re-emerges and
-    // blooms back up to full scale, mirroring the opening hero so the page
-    // ends on the same gesture it began with.
     const bottom = readBottomProgress();
 
-    const targetScale = Math.max(1 - fade, bottom);
-    const targetOpacity = Math.max(1 - fade, bottom);
+    // Centeredness: 1 = centered hero pose (opening + closing); 0 = fully
+    // committed to the journey. Smoothly drops as the user scrolls past
+    // the hero band, then ramps back up when the bottom-progress kicks in.
+    const drifted = smoothstep(0.15, 0.30, p);
+    const centerness = Math.max(1 - drifted, bottom);
 
+    // ─── Position ───────────────────────────────────────────────────────
+    // Center anchor at world (0,0). Journey anchor follows the existing
+    // path through the corners (desktop only). Final position lerps
+    // between them by centerness.
+    let journeyX = 0;
+    let journeyY = 0;
+    if (!isMobile) {
+      const cam = state.camera as THREE.PerspectiveCamera;
+      const fovRad = (cam.fov * Math.PI) / 180;
+      const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
+      const visibleW = visibleH * cam.aspect;
+      const sy = typeof window !== "undefined" ? window.scrollY : 0;
+      const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+      const docH =
+        typeof document !== "undefined"
+          ? document.documentElement.scrollHeight
+          : vh;
+
+      // Journey starts the moment the blob has fully drifted out of the
+      // hero pose (~scrollY = vh*0.20). Maps the rest of the scroll across
+      // the spline so each section gets a clean stretch of the journey.
+      const journeyStart = vh * 0.20;
+      const journeyEnd = Math.max(docH - vh, journeyStart + 1);
+      const journeyRaw = (sy - journeyStart) / (journeyEnd - journeyStart);
+      const journeyClamped = Math.min(Math.max(journeyRaw, 0), 1);
+      const journeyEased =
+        journeyClamped * journeyClamped * (3 - 2 * journeyClamped);
+      const [nx, ny] = pathPoint(journeyEased);
+      const ndcX = nx * 2 - 1;
+      const ndcY = -(ny * 2 - 1);
+      journeyX = (ndcX * visibleW) / 2;
+      journeyY = (ndcY * visibleH) / 2;
+    }
+    const targetX = journeyX * (1 - centerness);
+    const targetY = journeyY * (1 - centerness);
+    const posK = lerpK(6, delta);
+    mesh.current.position.x +=
+      (targetX - mesh.current.position.x) * posK;
+    mesh.current.position.y +=
+      (targetY - mesh.current.position.y) * posK;
+
+    // ─── Scale ──────────────────────────────────────────────────────────
+    // Centered pose = full hero size. Drifting on desktop = ~40% so the
+    // blob still reads as a presence in the corner without dominating the
+    // column. Mobile drifts to 0 (invisible) since there's no corner real
+    // estate that doesn't overlap reading.
+    const driftScale = isMobile ? 0 : 0.4;
+    const targetScale = driftScale + (1 - driftScale) * centerness;
+    const pinch = Math.sin(smoothstep(0, 0.15, p) * Math.PI) * 0.07;
     const k = lerpK(8, delta);
     const cur = mesh.current.scale.y;
     const ns = cur + (targetScale - cur) * k;
-    // Squash while pinching (X bulges out as Y compresses), then back to round.
     mesh.current.scale.set(ns * (1 + pinch * 0.6), ns * (1 - pinch), ns);
+
+    // ─── Opacity ────────────────────────────────────────────────────────
+    // Desktop stays nearly opaque end-to-end (slight dim during the drift
+    // so it sits comfortably under content). Mobile fully fades out
+    // mid-page so it doesn't overlap reading.
+    const targetOpacity = isMobile
+      ? Math.max(centerness, 0)
+      : Math.max(centerness, 0.78);
     m.uniforms.uOpacity.value +=
       (targetOpacity - m.uniforms.uOpacity.value) * k;
 
-    mesh.current.rotation.y += delta * 0.06;
-    mesh.current.rotation.x += delta * 0.02;
+    // Distortion baseline ramps from 0.6 (full hero) toward 0.45 mid-page
+    // so the small drifting form doesn't read as turbulent as the full
+    // opening hero. Set outside the section block so it always lands.
+    const baseDist = 0.6 - 0.15 * (1 - centerness);
+    m.uniforms.uDistortion.value = baseDist + egg * 1.4;
+
+    // ─── Section detection: color, shape, pulse ─────────────────────────
+    const sections = sectionsRef.current;
+    if (sections.length > 0) {
+      const sy = typeof window !== "undefined" ? window.scrollY : 0;
+      const vh = typeof window !== "undefined" ? window.innerHeight : 1;
+      const center = sy + vh / 2;
+      let activeId = "top";
+      for (const s of sections) {
+        if (center >= s.top && center < s.bottom) {
+          activeId = s.id;
+          break;
+        }
+      }
+
+      // Color mood
+      const palette = SECTION_MOOD[activeId] ?? SECTION_MOOD.top;
+      const tColor = new THREE.Color(palette[0]);
+      const cColor = new THREE.Color(palette[1]);
+      const colorK = lerpK(1.2, delta);
+      m.uniforms.uColorB.value.lerp(tColor, colorK);
+      m.uniforms.uColorC.value.lerp(cColor, colorK);
+
+      // Shape mood — silhouette stretch + noise frequency/amplitude
+      const shape = SECTION_SHAPE[activeId] ?? SECTION_SHAPE.top;
+      const stretchTarget = new THREE.Vector3(shape[0], shape[1], shape[2]);
+      const shapeK = lerpK(1.4, delta);
+      m.uniforms.uStretch.value.lerp(stretchTarget, shapeK);
+      m.uniforms.uNoiseFreq.value +=
+        (shape[3] - m.uniforms.uNoiseFreq.value) * shapeK;
+      m.uniforms.uNoiseAmp.value +=
+        (shape[4] - m.uniforms.uNoiseAmp.value) * shapeK;
+
+      // Pulse on section change
+      if (activeId !== lastSectionRef.current) {
+        lastSectionRef.current = activeId;
+        m.uniforms.uClickStrength.value = Math.max(
+          m.uniforms.uClickStrength.value,
+          0.85,
+        );
+      }
+    }
+
+    // Continuous slow spin keeps the surface alive whether the blob is
+    // parked at hero or hovering on a journey waypoint mid-scroll.
+    mesh.current.rotation.y += delta * 0.08;
+    mesh.current.rotation.x += delta * 0.03;
   });
 
   return (
@@ -358,6 +513,26 @@ const SECTION_MOOD: Record<string, [string, string]> = {
   work: ["#ff7a3d", "#c8ff00"],
   capabilities: ["#3ad4ff", "#c8ff00"],
   contact: ["#c8ff00", "#8a5cff"],
+};
+
+/**
+ * Per-section shape mood — the droplet's actual silhouette morphs as you
+ * scroll through the page, not just its color. Each entry is
+ * [stretchX, stretchY, stretchZ, noiseFreq, noiseAmp]:
+ *
+ * - top         organic baseline (matches the hero blob's shape)
+ * - about       compact pearl — slight vertical lean, calmer surface
+ * - work        horizontal streak — wide and elongated, more turbulent
+ * - capabilities spike-ball — tight stretch but high-frequency, high-amp
+ *                noise so the surface reads as crystalline / faceted
+ * - contact     alive — bigger, brighter surface activity at the finale
+ */
+const SECTION_SHAPE: Record<string, [number, number, number, number, number]> = {
+  top:          [1.0, 1.0, 1.0, 1.0, 1.0],
+  about:        [0.9, 1.1, 0.9, 0.7, 0.8],
+  work:         [1.55, 0.7, 0.9, 1.2, 1.05],
+  capabilities: [1.0, 1.0, 1.0, 2.2, 1.4],
+  contact:      [1.1, 1.1, 1.1, 1.1, 1.3],
 };
 
 const SECTION_IDS = ["top", "about", "work", "capabilities", "contact"];
@@ -422,214 +597,6 @@ function pathPoint(progress: number): [number, number] {
   ];
 }
 
-function Droplet() {
-  const mesh = useRef<THREE.Mesh>(null);
-  const mouse = useSharedMouse();
-  const uniforms = useMemo(() => makeBlobUniforms(0.45, 0.14, 0), []);
-  useClickShock(mesh);
-
-  // Section bounds for color-mood detection. Cached on resize since layout
-  // changes can shift section offsets.
-  const sectionsRef = useRef<Array<{ id: string; top: number; bottom: number }>>(
-    [],
-  );
-  useEffect(() => {
-    const collect = () => {
-      sectionsRef.current = SECTION_IDS.map((id) => {
-        const el = document.getElementById(id);
-        const top = el?.offsetTop ?? 0;
-        const height = el?.offsetHeight ?? 0;
-        return { id, top, bottom: top + height };
-      });
-    };
-    collect();
-    window.addEventListener("resize", collect);
-    return () => window.removeEventListener("resize", collect);
-  }, []);
-
-  // Idle tracking: any scroll, pointer move, or keypress resets the timer.
-  // After the threshold, the droplet quietly grows + drifts in a slow loop
-  // as a "showing off" gesture — snaps back the moment the user moves.
-  const lastInteractionRef = useRef<number>(
-    typeof performance !== "undefined" ? performance.now() : 0,
-  );
-  useEffect(() => {
-    const reset = () => {
-      lastInteractionRef.current = performance.now();
-    };
-    window.addEventListener("scroll", reset, { passive: true });
-    window.addEventListener("pointermove", reset, { passive: true });
-    window.addEventListener("keydown", reset, { passive: true });
-    window.addEventListener("touchstart", reset, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", reset);
-      window.removeEventListener("pointermove", reset);
-      window.removeEventListener("keydown", reset);
-      window.removeEventListener("touchstart", reset);
-    };
-  }, []);
-
-  useFrame((state, delta) => {
-    if (!mesh.current) return;
-    const m = mesh.current.material as THREE.ShaderMaterial;
-    m.uniforms.uTime.value = state.clock.elapsedTime;
-    m.uniforms.uMouse.value.lerp(mouse.current, lerpK(3, delta));
-    m.uniforms.uClickStrength.value *= Math.exp(-2 * delta);
-    const egg = eggIntensity();
-    m.uniforms.uDistortion.value = 0.45 + egg * 1.2;
-    m.uniforms.uClickStrength.value = Math.max(
-      m.uniforms.uClickStrength.value,
-      egg,
-    );
-
-    const p = readDropProgress();
-    const cam = state.camera as THREE.PerspectiveCamera;
-    const fovRad = (cam.fov * Math.PI) / 180;
-    const visibleH = 2 * Math.tan(fovRad / 2) * cam.position.z;
-    const visibleW = visibleH * cam.aspect;
-    const vh = typeof window !== "undefined" ? window.innerHeight : 1;
-    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
-    const docH =
-      typeof document !== "undefined"
-        ? document.documentElement.scrollHeight
-        : vh;
-
-    // Droplet emerges only AFTER the hero has fully collapsed (hero fade
-    // completes at 0.28; droplet starts at 0.30) — guarantees the two
-    // shapes never co-exist on screen. Also fades back out at the very
-    // bottom of the page so the re-emerging hero gets the stage to itself.
-    const bottom = readBottomProgress();
-    const emerge = smoothstep(0.30, 0.42, p) * (1 - bottom);
-
-    // ─── Phase A — pinch off the hero and arc into the top-right corner.
-    const cornerMargin = 0.85;
-    const parkXworld = visibleW / 2 - cornerMargin;
-    const parkYworld = visibleH / 2 - cornerMargin;
-    const travel = smoothstep(0.28, 0.85, p);
-    const arcCx = parkXworld * 0.35;
-    const arcCy = parkYworld * 2.4;
-    const omt = 1 - travel;
-    const aX = 2 * omt * travel * arcCx + travel * travel * parkXworld;
-    const aY = 2 * omt * travel * arcCy + travel * travel * parkYworld;
-
-    // ─── Phase B — drift along the journey path. Map the scroll past the
-    // hero to a 0..1 progress along the spline; smoothstep applied so the
-    // droplet eases in/out of the entire journey rather than running at
-    // constant speed end-to-end.
-    const phaseAEndScroll = vh * 0.65;
-    const journeyEndScroll = Math.max(docH - vh, phaseAEndScroll + 1);
-    const journeyRaw =
-      (scrollY - phaseAEndScroll) /
-      (journeyEndScroll - phaseAEndScroll);
-    const journeyClamped = Math.min(Math.max(journeyRaw, 0), 1);
-    // Single eased curve over the entire journey — gives slow start, slow
-    // finish, gentle pull through the middle. Feels like a glide, not a
-    // forced march from box to box.
-    const journeyEased =
-      journeyClamped * journeyClamped * (3 - 2 * journeyClamped);
-    const [nx, ny] = pathPoint(journeyEased);
-
-    // Convert normalized viewport coords → world. Y is flipped because CSS
-    // y-down vs three.js y-up.
-    const ndcX = nx * 2 - 1;
-    const ndcY = -(ny * 2 - 1);
-    const bX = (ndcX * visibleW) / 2;
-    const bY = (ndcY * visibleH) / 2;
-
-    // Hand off when Phase A has fully delivered the droplet to the corner.
-    // Phase B's start anchor (JOURNEY_PATH[0]) sits at the same corner spot,
-    // so the transition is invisible.
-    const handoff = smoothstep(0.85, 1.0, p);
-    const targetX = aX * (1 - handoff) + bX * handoff;
-    const targetY = aY * (1 - handoff) + bY * handoff;
-
-    // Subtle organic wander on top of the path — the droplet doesn't ride
-    // the spline like a train on a rail; it drifts off it slightly the way
-    // a real droplet would. Tiny amplitudes so the macro path still reads.
-    const t = state.clock.elapsedTime;
-    const wanderX = Math.sin(t * 0.41) * 0.015 * visibleW;
-    const wanderY = Math.cos(t * 0.33) * 0.015 * visibleH;
-
-    // Idle "showing off" mode: after ~18s of no interaction, the droplet
-    // grows slightly and sweeps in a slow loop around its current spot.
-    // Snaps back the moment any input arrives.
-    const idleSec =
-      typeof performance !== "undefined"
-        ? (performance.now() - lastInteractionRef.current) / 1000
-        : 0;
-    const idleness = smoothstep(15, 28, idleSec);
-    const idleDriftX = Math.cos(t * 0.32) * idleness * 0.7;
-    const idleDriftY = Math.sin(t * 0.32) * idleness * 0.7;
-
-    mesh.current.position.set(
-      targetX + wanderX * handoff + idleDriftX,
-      targetY + wanderY * handoff + idleDriftY,
-      0,
-    );
-
-    // Size: small and consistent through the journey, with a gentle bulge
-    // at the very end (finale near the email) to draw the eye. Idle mode
-    // adds another bump on top.
-    const finaleBulge = smoothstep(0.85, 1.0, journeyClamped) * 0.18;
-    const breath = 1 + Math.sin(t * 1.6) * 0.025;
-    const baseSize = 0.4 + finaleBulge;
-    const aSize = 0.4;
-    const idleScale = 1 + idleness * 0.45;
-    const size =
-      (aSize * (1 - handoff) + baseSize * handoff) *
-      breath *
-      idleScale *
-      emerge;
-    mesh.current.scale.setScalar(size);
-
-    // Opacity: bright as it pinches off and arcs, softens to 0.55 once it
-    // joins the journey, brightens again at the finale, brightens further
-    // in idle mode so it draws attention back.
-    const aOpacity = 1 - 0.45 * travel;
-    const bOpacity = 0.55 + finaleBulge * 0.6 + idleness * 0.3;
-    const targetOpacity = emerge * (aOpacity * (1 - handoff) + bOpacity * handoff);
-    m.uniforms.uOpacity.value +=
-      (targetOpacity - m.uniforms.uOpacity.value) * lerpK(10, delta);
-
-    // Section mood — find which section's vertical center is closest to
-    // viewport center and lerp the surface palette toward that section's
-    // colors. Slow lerp (rate 1) so transitions feel ambient, not flicker.
-    const sections = sectionsRef.current;
-    if (sections.length > 0) {
-      const center = scrollY + vh / 2;
-      let activeId = "top";
-      for (const s of sections) {
-        if (center >= s.top && center < s.bottom) {
-          activeId = s.id;
-          break;
-        }
-      }
-      const palette = SECTION_MOOD[activeId] ?? SECTION_MOOD.top;
-      const tColor = new THREE.Color(palette[0]);
-      const cColor = new THREE.Color(palette[1]);
-      const colorK = lerpK(1.2, delta);
-      m.uniforms.uColorB.value.lerp(tColor, colorK);
-      m.uniforms.uColorC.value.lerp(cColor, colorK);
-    }
-
-    // Continuous slow spin keeps the surface alive even when the droplet
-    // is hovering on a path point during a slow scroll.
-    mesh.current.rotation.y += delta * 0.18;
-    mesh.current.rotation.x += delta * 0.08;
-  });
-
-  return (
-    <mesh ref={mesh} scale={0}>
-      <icosahedronGeometry args={[1.4, 48]} />
-      <shaderMaterial
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-        transparent
-      />
-    </mesh>
-  );
-}
 
 function Particles({ count = 600 }: { count?: number }) {
   const ref = useRef<THREE.Points>(null);
@@ -729,13 +696,13 @@ export function HeroScene() {
       <Suspense fallback={null}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[3, 4, 5]} intensity={1.1} />
-        <HeroBlob />
-        {/* On mobile the droplet's "drift along the edges" choreography has
-            no edges to drift on — the journey path lands it directly in the
-            reading column and the geometry is sized for a desktop canvas. The
-            hero blob still pinches off and fades for everyone; mobile just
-            skips the post-hero drifter and the ambient particle cloud. */}
-        {!isMobile && <Droplet />}
+        {/* One persistent shape across the entire page — opens centered as
+            the hero, shrinks + drifts along the journey path while morphing
+            per section, then re-blooms centered at the bottom. Replaces the
+            previous "pinch off into a separate droplet" architecture. */}
+        <HeroBlob isMobile={isMobile} />
+        {/* Particle cloud is desktop-only — fades out fast and doesn't add
+            much value on a narrow viewport. */}
         {!isMobile && <Particles />}
         {/* Post: gentle bloom on the boiling-water highlights + a faint
             chromatic aberration that bleeds the violet/lime accents at the
