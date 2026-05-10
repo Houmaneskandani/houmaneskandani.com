@@ -536,20 +536,22 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
       m.uniforms.uColorC.value.lerp(cColor, colorK);
 
       // Shape mood — silhouette stretch + noise frequency/amplitude.
-      // During the portrait orbit, blend toward a thin elongated ribbon
-      // so the blob reads as a streak going around the photo.
+      // During the portrait orbit the blob blends into a fluid drop
+      // rather than a flat ribbon — fatter ellipsoid with volume, plus
+      // turbulent high-frequency noise + heavy amplitude so the surface
+      // reads as flowing liquid wrapping the photo, not a solid streak.
       const shape = SECTION_SHAPE[activeId] ?? SECTION_SHAPE.top;
       const sectionStretch = new THREE.Vector3(shape[0], shape[1], shape[2]);
-      const ribbonStretch = new THREE.Vector3(2.6, 0.22, 0.22);
+      const fluidStretch = new THREE.Vector3(1.55, 0.7, 0.7);
       const stretchTarget = sectionStretch
         .clone()
-        .lerp(ribbonStretch, orbitInfluence);
-      const ribbonNoiseFreq = 0.6;
-      const ribbonNoiseAmp = 0.55;
+        .lerp(fluidStretch, orbitInfluence);
+      const fluidNoiseFreq = 1.9;
+      const fluidNoiseAmp = 1.55;
       const noiseFreqTarget =
-        shape[3] * (1 - orbitInfluence) + ribbonNoiseFreq * orbitInfluence;
+        shape[3] * (1 - orbitInfluence) + fluidNoiseFreq * orbitInfluence;
       const noiseAmpTarget =
-        shape[4] * (1 - orbitInfluence) + ribbonNoiseAmp * orbitInfluence;
+        shape[4] * (1 - orbitInfluence) + fluidNoiseAmp * orbitInfluence;
       const shapeK = lerpK(1.4, delta);
       m.uniforms.uStretch.value.lerp(stretchTarget, shapeK);
       m.uniforms.uNoiseFreq.value +=
