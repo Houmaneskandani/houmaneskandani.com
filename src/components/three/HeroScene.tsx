@@ -10,7 +10,7 @@ import { BlendFunction } from "postprocessing";
 import { useRef, Suspense, useMemo, useEffect, useState } from "react";
 import * as THREE from "three";
 import { Vector2 } from "three";
-import { usePrefersReducedMotion } from "@/lib/hooks";
+import { usePrefersReducedMotion, useIsMobile } from "@/lib/hooks";
 
 function StaticHeroFallback() {
   return (
@@ -664,6 +664,7 @@ function Particles({ count = 600 }: { count?: number }) {
 export function HeroScene() {
   const [mounted, setMounted] = useState(false);
   const reduced = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   useEffect(() => {
     // Defer Canvas mount until the browser is idle so the LCP text paints
     // first and Three.js parsing/init doesn't block the main thread.
@@ -704,8 +705,13 @@ export function HeroScene() {
         <ambientLight intensity={0.5} />
         <directionalLight position={[3, 4, 5]} intensity={1.1} />
         <HeroBlob />
-        <Droplet />
-        <Particles />
+        {/* On mobile the droplet's "drift along the edges" choreography has
+            no edges to drift on — the journey path lands it directly in the
+            reading column and the geometry is sized for a desktop canvas. The
+            hero blob still pinches off and fades for everyone; mobile just
+            skips the post-hero drifter and the ambient particle cloud. */}
+        {!isMobile && <Droplet />}
+        {!isMobile && <Particles />}
         {/* Post: gentle bloom on the boiling-water highlights + a faint
             chromatic aberration that bleeds the violet/lime accents at the
             blob's silhouette. Tuned soft so it reads as cinematic glow,
