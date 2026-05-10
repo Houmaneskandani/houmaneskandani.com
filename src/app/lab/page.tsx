@@ -5,6 +5,7 @@ import { Footer } from "@/components/sections/Footer";
 import { SplitText } from "@/components/ui/SplitText";
 import { Reveal } from "@/components/ui/Reveal";
 import { SIDE_PROJECTS } from "@/lib/data";
+import { SideProjectLogo } from "@/components/brand/SideProjectLogo";
 
 export const metadata: Metadata = {
   title: "Side projects — Houman Eskandani",
@@ -87,8 +88,22 @@ export default function SideProjectsPage() {
                           <span className="opacity-60"> · {p.status}</span>
                         ) : null}
                       </p>
-                      <h3 className="text-display text-[2rem] leading-[1.05] transition-transform duration-700 group-hover:translate-x-3 md:text-5xl">
-                        {p.name}
+                      <h3 className="text-display flex items-center gap-3 text-[2rem] leading-[1.05] transition-transform duration-700 group-hover:translate-x-3 md:text-5xl md:gap-4">
+                        {p.logo ? (
+                          <SideProjectLogo
+                            kind={p.logo}
+                            size={36}
+                            className="shrink-0 md:hidden"
+                          />
+                        ) : null}
+                        {p.logo ? (
+                          <SideProjectLogo
+                            kind={p.logo}
+                            size={52}
+                            className="hidden shrink-0 md:inline-block"
+                          />
+                        ) : null}
+                        <span>{p.name}</span>
                       </h3>
                       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-(--color-muted) md:text-base">
                         {p.description}

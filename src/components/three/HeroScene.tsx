@@ -247,6 +247,23 @@ function readDropProgress(): number {
 }
 
 /**
+ * 0 while reading the middle of the page, 1 once the user is at the very
+ * bottom. Smoothstepped over the final 0.8vh of scroll so the re-expansion
+ * eases in rather than snapping. Drives the hero blob blooming back at the
+ * end of the page (and the droplet fading out so they don't co-exist).
+ */
+function readBottomProgress(): number {
+  if (typeof window === "undefined" || typeof document === "undefined") return 0;
+  const vh = window.innerHeight;
+  const docH = document.documentElement.scrollHeight;
+  const maxScroll = Math.max(docH - vh, 1);
+  const remaining = maxScroll - window.scrollY;
+  const trigger = vh * 0.8;
+  const raw = 1 - Math.min(Math.max(remaining / trigger, 0), 1);
+  return raw * raw * (3 - 2 * raw);
+}
+
+/**
  * Frame-rate independent lerp factor. `rate` is roughly "what fraction
  * approaches per second" — using exp keeps motion identical whether the
  * client renders at 60Hz, 120Hz, or drops to 30. Critical for the drop
@@ -290,12 +307,19 @@ function HeroBlob() {
     // is bunching up before releasing the droplet.
     const pinch = Math.sin(smoothstep(0, 0.15, p) * Math.PI) * 0.07;
 
-    // Phase 2 — fast collapse (0.15..0.32): once the droplet has pinched
-    // off, the hero rapidly contracts to nothing so there's never a moment
-    // where the user sees a half-hero next to a fully-formed droplet.
-    const fade = smoothstep(0.15, 0.32, p);
-    const targetScale = 1 - fade;
-    const targetOpacity = 1 - fade;
+    // Phase 2 — fast collapse (0.15..0.28): once the droplet has pinched
+    // off, the hero rapidly contracts to nothing. Tightened so the hero is
+    // fully gone by 0.28 — the droplet doesn't start emerging until 0.30
+    // (see Droplet.emerge), so the two never overlap on screen.
+    const fade = smoothstep(0.15, 0.28, p);
+
+    // Phase 3 — at the very bottom of the page the hero re-emerges and
+    // blooms back up to full scale, mirroring the opening hero so the page
+    // ends on the same gesture it began with.
+    const bottom = readBottomProgress();
+
+    const targetScale = Math.max(1 - fade, bottom);
+    const targetOpacity = Math.max(1 - fade, bottom);
 
     const k = lerpK(8, delta);
     const cur = mesh.current.scale.y;
@@ -470,11 +494,12 @@ function Droplet() {
         ? document.documentElement.scrollHeight
         : vh;
 
-    // Droplet emerges later so it doesn't co-exist with a still-visible hero.
-    // Sequence: hero pinches → droplet emerges (hero collapsing) → droplet
-    // travels (hero gone). At any single moment there's only one prominent
-    // shape on screen.
-    const emerge = smoothstep(0.18, 0.30, p);
+    // Droplet emerges only AFTER the hero has fully collapsed (hero fade
+    // completes at 0.28; droplet starts at 0.30) — guarantees the two
+    // shapes never co-exist on screen. Also fades back out at the very
+    // bottom of the page so the re-emerging hero gets the stage to itself.
+    const bottom = readBottomProgress();
+    const emerge = smoothstep(0.30, 0.42, p) * (1 - bottom);
 
     // ─── Phase A — pinch off the hero and arc into the top-right corner.
     const cornerMargin = 0.85;
