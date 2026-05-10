@@ -346,6 +346,16 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
   // rather than a silent slow lerp.
   const lastSectionRef = useRef<string>("top");
 
+  // Cached pointer to the About-section portrait. Looked up once on mount
+  // and refreshed lazily inside useFrame if the element disappears (e.g.
+  // hot-reload). Drives the "ribbon orbiting the photo" mode.
+  const portraitElRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    portraitElRef.current = document.querySelector<HTMLElement>(
+      '[data-drop="portrait"]',
+    );
+  }, []);
+
   useFrame((state, delta) => {
     if (!mesh.current) return;
     const m = mesh.current.material as THREE.ShaderMaterial;
@@ -372,10 +382,16 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
 
     // ─── Position ───────────────────────────────────────────────────────
     // Center anchor at world (0,0). Journey anchor follows the existing
-    // path through the corners (desktop only). Final position lerps
-    // between them by centerness.
+    // path through the corners (desktop only). Portrait anchor wraps the
+    // About portrait on a tangent orbit when the photo is in view.
+    // Final position lerps between them by centerness + portraitVis.
     let journeyX = 0;
     let journeyY = 0;
+    let orbitX = 0;
+    let orbitY = 0;
+    let orbitAngle = 0;
+    let portraitVis = 0;
+
     if (!isMobile) {
       const cam = state.camera as THREE.PerspectiveCamera;
       const fovRad = (cam.fov * Math.PI) / 180;
@@ -402,14 +418,71 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
       const ndcY = -(ny * 2 - 1);
       journeyX = (ndcX * visibleW) / 2;
       journeyY = (ndcY * visibleH) / 2;
+
+      // Portrait orbit — when the About photo is in view, the blob morphs
+      // into a thin ribbon and orbits around the portrait. As the user
+      // scrolls past, portraitVis fades back to 0 and the blob releases
+      // back into its normal journey toward Work.
+      let portraitEl = portraitElRef.current;
+      if (!portraitEl) {
+        portraitEl = document.querySelector<HTMLElement>(
+          '[data-drop="portrait"]',
+        );
+        portraitElRef.current = portraitEl;
+      }
+      if (portraitEl) {
+        const rect = portraitEl.getBoundingClientRect();
+        if (rect.width > 0) {
+          // Visibility peaks when the portrait's vertical center sits ~45%
+          // down the viewport (the natural reading anchor). Falls to 0
+          // when the photo is fully off-screen above or below.
+          const portraitCenterY = rect.top + rect.height / 2;
+          const sweetSpotY = vh * 0.45;
+          const distance = Math.abs(portraitCenterY - sweetSpotY);
+          portraitVis = 1 - smoothstep(vh * 0.18, vh * 0.55, distance);
+
+          // Portrait center → world coordinates.
+          const portraitCenterX = rect.left + rect.width / 2;
+          const ndcPx = (portraitCenterX / window.innerWidth) * 2 - 1;
+          const ndcPy = -((portraitCenterY / vh) * 2 - 1);
+          const portraitWorldX = (ndcPx * visibleW) / 2;
+          const portraitWorldY = (ndcPy * visibleH) / 2;
+
+          // Orbit radius: a touch bigger than the portrait so the ribbon
+          // actually goes around the photo edge rather than across it.
+          const portraitWorldHalfW = (rect.width / window.innerWidth) * visibleW * 0.5;
+          const portraitWorldHalfH = (rect.height / vh) * visibleH * 0.5;
+          const orbitRadius =
+            Math.max(portraitWorldHalfW, portraitWorldHalfH) * 1.35;
+
+          orbitAngle = state.clock.elapsedTime * 0.85;
+          orbitX = portraitWorldX + orbitRadius * Math.cos(orbitAngle);
+          orbitY = portraitWorldY + orbitRadius * Math.sin(orbitAngle);
+        }
+      }
     }
-    const targetX = journeyX * (1 - centerness);
-    const targetY = journeyY * (1 - centerness);
+
+    // Hero pose dominates while centered (opening + closing). Portrait
+    // orbit only kicks in once the blob is committed to the journey, so
+    // the hero never gets disrupted.
+    const orbitInfluence = portraitVis * (1 - centerness);
+    const baseX = journeyX * (1 - centerness);
+    const baseY = journeyY * (1 - centerness);
+    const targetX = baseX * (1 - orbitInfluence) + orbitX * orbitInfluence;
+    const targetY = baseY * (1 - orbitInfluence) + orbitY * orbitInfluence;
     const posK = lerpK(6, delta);
     mesh.current.position.x +=
       (targetX - mesh.current.position.x) * posK;
     mesh.current.position.y +=
       (targetY - mesh.current.position.y) * posK;
+
+    // Tangent rotation — when in orbit, point the blob's long axis along
+    // the orbit tangent so the ribbon traces around the portrait edge.
+    // Lerp into/out of the rotation so the snap doesn't read as a jolt.
+    const tangentZ = orbitAngle + Math.PI / 2;
+    const targetRotZ = tangentZ * orbitInfluence;
+    mesh.current.rotation.z +=
+      (targetRotZ - mesh.current.rotation.z) * lerpK(4, delta);
 
     // ─── Scale ──────────────────────────────────────────────────────────
     // Centered pose = full hero size. Drifting on desktop = ~40% so the
@@ -462,15 +535,27 @@ function HeroBlob({ isMobile }: { isMobile: boolean }) {
       m.uniforms.uColorB.value.lerp(tColor, colorK);
       m.uniforms.uColorC.value.lerp(cColor, colorK);
 
-      // Shape mood — silhouette stretch + noise frequency/amplitude
+      // Shape mood — silhouette stretch + noise frequency/amplitude.
+      // During the portrait orbit, blend toward a thin elongated ribbon
+      // so the blob reads as a streak going around the photo.
       const shape = SECTION_SHAPE[activeId] ?? SECTION_SHAPE.top;
-      const stretchTarget = new THREE.Vector3(shape[0], shape[1], shape[2]);
+      const sectionStretch = new THREE.Vector3(shape[0], shape[1], shape[2]);
+      const ribbonStretch = new THREE.Vector3(2.6, 0.22, 0.22);
+      const stretchTarget = sectionStretch
+        .clone()
+        .lerp(ribbonStretch, orbitInfluence);
+      const ribbonNoiseFreq = 0.6;
+      const ribbonNoiseAmp = 0.55;
+      const noiseFreqTarget =
+        shape[3] * (1 - orbitInfluence) + ribbonNoiseFreq * orbitInfluence;
+      const noiseAmpTarget =
+        shape[4] * (1 - orbitInfluence) + ribbonNoiseAmp * orbitInfluence;
       const shapeK = lerpK(1.4, delta);
       m.uniforms.uStretch.value.lerp(stretchTarget, shapeK);
       m.uniforms.uNoiseFreq.value +=
-        (shape[3] - m.uniforms.uNoiseFreq.value) * shapeK;
+        (noiseFreqTarget - m.uniforms.uNoiseFreq.value) * shapeK;
       m.uniforms.uNoiseAmp.value +=
-        (shape[4] - m.uniforms.uNoiseAmp.value) * shapeK;
+        (noiseAmpTarget - m.uniforms.uNoiseAmp.value) * shapeK;
 
       // Pulse on section change
       if (activeId !== lastSectionRef.current) {
