@@ -102,12 +102,12 @@ export const PROJECTS: Project[] = [
     role: "Software Engineer II",
     tags: ["Java", "SQL", "PCI-DSS", "Linux"],
     summary:
-      "High-security card issuance at bank scale, under PCI-DSS, for tier-1 U.S. financial institutions.",
+      "High-security card issuance in production, under PCI-DSS, for tier-1 U.S. financial institutions.",
     accent: "#8a5cff",
     context:
       "IDEMIA's card personalization platform issues physical cards for some of the largest U.S. banks. PCI-DSS compliance is the floor; zero tolerance for data defects in production is the bar. I spent three years there on the backend that turns a customer record into a card a real person uses.",
     problem:
-      "At bank scale, edge-case data defects, layout regressions, and SLA-bound incidents come with the territory. Every change has to be backward-compatible with live programs — you can't break a card program that's been issuing for years.",
+      "At this scale, edge-case data defects, layout regressions, and SLA-bound incidents come with the territory. Every change has to be backward-compatible with live programs — you can't break a card program that's been issuing for years.",
     approach: [
       {
         heading: "Secure issuance pipelines under PCI-DSS",
@@ -271,6 +271,8 @@ export type SideProject = {
   /** External repo / live URL. */
   external?: string;
   status?: string;
+  /** Inline brand mark rendered before the project name on /lab. */
+  logo?: "bitcoin" | "applyagent";
 };
 
 // Things built outside paid work. Honest list — only ship what's real.
@@ -285,6 +287,7 @@ export const SIDE_PROJECTS: SideProject[] = [
     href: "/work/applyagent",
     external: "https://github.com/Houmaneskandani/ApplyAgent",
     status: "Active",
+    logo: "applyagent",
   },
   {
     id: "02",
@@ -293,6 +296,7 @@ export const SIDE_PROJECTS: SideProject[] = [
     description:
       "Self-improving crypto trading system. A Claude-powered post-trade analyst grades every closed trade, writes rules into a learned-rules file, and the signal screener reads them before approving the next entry. Multi-strategy scanners (incl. liquidity sweep), per-strategy backtester, regime filter, and live execution on Hyperliquid perps.",
     status: "Private · Live",
+    logo: "bitcoin",
   },
 ];
 

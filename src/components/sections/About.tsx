@@ -63,7 +63,7 @@ export function About() {
                   I&apos;m a backend engineer with 5+ years building
                   high-security, multi-tenant APIs — most of that time at
                   IDEMIA, on the card-issuance platform that ships secure
-                  card transactions at bank scale for{" "}
+                  card transactions in production for{" "}
                   <span className="text-(--color-fg)">tier-1 U.S. financial
                   institutions</span>.
                 </p>
@@ -107,7 +107,7 @@ export function About() {
             <ul className="grid grid-cols-2 gap-y-6 border-t border-(--color-line) pt-8 md:grid-cols-4">
               {[
                 ["5+", "yrs in backend"],
-                ["Bank-scale", "card issuance"],
+                ["Zero-downtime", "deploys"],
                 ["Tier-1", "banking clients"],
                 ["Multi-tenant", "GraphQL platform"],
               ].map(([n, label]) => (
