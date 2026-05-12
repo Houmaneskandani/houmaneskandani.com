@@ -53,10 +53,10 @@ export const PROJECTS: Project[] = [
     role: "Backend / Platform Engineer",
     tags: ["Go", "GraphQL", "Kubernetes", "Postgres"],
     summary:
-      "Backend platform engineering — APIs, security, operations, and the foundations a small team needs to keep shipping.",
+      "Backend platform engineering behind a VR live-music streaming product — APIs, security, operations, and the foundations a small team needs to keep shipping.",
     accent: "#c8ff00",
     context:
-      "When I joined, The Vport needed a backend that could scale with the product and an operational footprint a small team could actually run — without standing up a dedicated SRE function.",
+      "The Vport runs a VR concert streaming platform — global live music events with on-demand playback and real-time analytics. When I joined, they needed a backend that could scale with the product and an operational footprint a small team could actually run, without standing up a dedicated SRE function.",
     problem:
       "Security, operational, and platform concerns were spread across multiple layers and had grown organically. The work was to consolidate guarantees in fewer places so the team can keep shipping without firefighting.",
     approach: [

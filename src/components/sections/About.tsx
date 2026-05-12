@@ -71,10 +71,10 @@ export function About() {
               <Reveal delay={0.07} className="mt-5">
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   Today I&apos;m at <span className="text-(--color-fg)">The
-                  Vport</span>, working on the GraphQL platform that backs
-                  their product — backend architecture, security, and the
-                  kind of observability that lets a small team sleep at
-                  night.
+                  Vport</span>, working on the GraphQL platform behind their
+                  VR concert streaming product — backend architecture,
+                  security, and the kind of observability that lets a small
+                  team sleep at night.
                 </p>
               </Reveal>
               <Reveal delay={0.14} className="mt-5">
