@@ -13,7 +13,12 @@ const ProjectHero = dynamic(
 );
 
 export function generateStaticParams() {
-  return PROJECTS.map((p) => ({ slug: p.slug }));
+  // Skip projects whose `href` points outside `/work/` (e.g. Diamond Hand
+  // lives at `/lab/diamond-hand`) — generating a thin `/work/<slug>` page
+  // for them would just create an orphan with no content.
+  return PROJECTS
+    .filter((p) => !p.href || p.href.startsWith("/work/"))
+    .map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
