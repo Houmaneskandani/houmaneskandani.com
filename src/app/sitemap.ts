@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { PROJECTS, SITE, type Project } from "@/lib/data";
+import { PROJECTS, SIDE_PROJECTS, SITE, type Project } from "@/lib/data";
 
 // Use the project's end-year as the lastModified hint. "2025 — present"
 // → today; "2022 — 2025" → 2025-12-31. Stable, accurate signal for crawlers.
@@ -33,6 +33,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ? ("monthly" as const)
         : ("yearly" as const),
       priority: 0.7,
+    })),
+    ...SIDE_PROJECTS.filter((p) => p.slug).map((p) => ({
+      url: `${SITE.url}/lab/${p.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
   ];
 }
