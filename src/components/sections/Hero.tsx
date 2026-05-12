@@ -34,7 +34,7 @@ export function Hero() {
             Houman Eskandani — Backend &amp; Cloud Platform Engineer.
             Building high-security, multi-tenant APIs and cloud platforms in
             Go, GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently
-            shipping the VCloud GraphQL platform at The Vport; previously at
+            shipping the GraphQL platform at The Vport; previously at
             IDEMIA on a card-personalization platform serving tier-1 U.S.
             banks.
           </span>

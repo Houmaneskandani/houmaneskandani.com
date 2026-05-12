@@ -5,7 +5,7 @@ export const SITE = {
   role: "Backend & Cloud Platform Engineer",
   shortRole: "Backend Engineer",
   tagline:
-    "Currently at The Vport on the VCloud GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
+    "Currently at The Vport, working on the GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
   email: "eskandanihouman@gmail.com",
   location: "Irvine, CA · Remote-friendly",
   // Will host at houmaneskandani.com once DNS is pointed at Vercel.
@@ -46,51 +46,39 @@ export type Project = {
 export const PROJECTS: Project[] = [
   {
     id: "01",
-    slug: "vcloud-platform",
-    title: "VCloud — multi-tenant GraphQL platform",
+    slug: "vport-platform",
+    title: "Platform engineering at The Vport",
     client: "The Vport",
     year: "2025 — present",
     role: "Backend / Platform Engineer",
-    tags: ["Go", "GraphQL", "GKE", "Postgres", "Tile38"],
+    tags: ["Go", "GraphQL", "Kubernetes", "Postgres"],
     summary:
-      "GraphQL APIs, JWT/cookie auth, deny-by-default RBAC, multi-namespace GKE cluster, and a presigned-URL media pipeline — the core of a multi-tenant venue product.",
+      "Backend platform engineering — APIs, security, operations, and the foundations a small team needs to keep shipping.",
     accent: "#c8ff00",
     context:
-      "When I joined, The Vport needed a backend that could host multiple tenant orgs behind a single GraphQL API without leaking data between them — and a Kubernetes footprint that a small team could actually operate, without a dedicated SRE.",
+      "When I joined, The Vport needed a backend that could scale with the product and an operational footprint a small team could actually run — without standing up a dedicated SRE function.",
     problem:
-      "Auth and tenant-isolation responsibilities were spread across multiple layers, and the deployment surface had grown organically. I started at the auth layer and worked outward to consolidate guarantees in fewer places.",
+      "Security, operational, and platform concerns were spread across multiple layers and had grown organically. The work was to consolidate guarantees in fewer places so the team can keep shipping without firefighting.",
     approach: [
       {
-        heading: "Centralized auth pipeline",
-        body: "Every endpoint declares the roles it allows. A middleware validates the token, attaches a request UUID for tracing, and rejects anything that doesn't match before resolvers ever run.",
+        heading: "Backend architecture & security model",
+        body: "Consolidated the platform's authorization and isolation responsibilities into fewer, well-defined layers — so guarantees can't drift as the codebase grows and new engineers join.",
       },
       {
-        heading: "Tenant isolation at the data layer",
-        body: "Multi-tenant scoping moved out of application code and into deny-by-default scopes at the data layer — so a missed check at the call site can't leak across tenants.",
+        heading: "Operational tooling & observability",
+        body: "Built the structured logging, request-level tracing, and dashboards the team trusts to run the platform day-to-day — and to find the root cause of an incident in minutes, not hours.",
       },
       {
-        heading: "Admin authentication & lifecycle flows",
-        body: "A separate admin surface with deny-by-default RBAC keeps sensitive operations off the user-facing API. Email and SMS side-channels handle MFA, verification, and password reset.",
-      },
-      {
-        heading: "Presigned-URL media pipeline",
-        body: "Direct-to-object-storage uploads via presigned URLs, an async worker for derivative assets, and CDN-backed delivery for downstream consumers.",
-      },
-      {
-        heading: "Geospatial discovery",
-        body: "Radius-based search backed by Tile38, with cursor-based DB pagination so location-aware queries stay fast and stable as the catalog grows.",
-      },
-      {
-        heading: "Observability you can actually use",
-        body: "A Prometheus exporter exposes GraphQL-aware metrics. Structured logs carry the request UUID and user context, so a single request is traceable end-to-end.",
+        heading: "Platform foundations",
+        body: "Set up the infrastructure backbone — repeatable deploys, healthy CI, and clean separation between environments — so engineers ship features instead of fighting the platform.",
       },
     ],
     outcome:
-      "A platform that scales horizontally on Kubernetes, a consolidated security model, and dashboards the team trusts for routine ops.",
+      "A backend that's easier to reason about, easier to operate, and easier to extend — without growing the team to do it.",
     metrics: [
-      { value: "Centralized", label: "auth pipeline" },
-      { value: "Multi-tenant", label: "isolation guarantees" },
-      { value: "End-to-end", label: "request tracing" },
+      { value: "Consolidated", label: "security model" },
+      { value: "Small team", label: "operations" },
+      { value: "Production", label: "reliability" },
     ],
   },
   {
@@ -251,7 +239,7 @@ export const CAPABILITIES: Capability[] = [
   },
   {
     label: "Data",
-    items: ["PostgreSQL (GORM)", "MongoDB", "MySQL", "Tile38"],
+    items: ["PostgreSQL (GORM)", "MongoDB", "MySQL"],
   },
   {
     label: "Cloud & DevOps",
@@ -393,7 +381,7 @@ export type Experience = {
 export const EXPERIENCE: Experience[] = [
   {
     company: "The Vport",
-    role: "Software Engineer — VCloud Platform",
+    role: "Software Engineer — Backend / Platform",
     period: "Apr 2025 — Present",
     location: "Remote · San Francisco, CA",
   },
