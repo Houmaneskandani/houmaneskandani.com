@@ -273,6 +273,29 @@ export type SideProject = {
   status?: string;
   /** Inline brand mark rendered before the project name on /lab. */
   logo?: "bitcoin" | "applyagent";
+
+  /**
+   * Optional case-study content. When `slug` is set, a `/lab/[slug]` route
+   * renders these fields as a full case study page (mirrors `/work/[slug]`).
+   */
+  slug?: string;
+  year?: string;
+  role?: string;
+  accent?: string;
+  summary?: string;
+  context?: string;
+  problem?: string;
+  approach?: ProjectSection[];
+  outcome?: string;
+  metrics?: { value: string; label: string }[];
+
+  /**
+   * Optional "live" CTA shown at the bottom of the case-study page —
+   * a prominent button linking to e.g. a private live dashboard.
+   */
+  liveUrl?: string;
+  liveLabel?: string;
+  liveNote?: string;
 };
 
 // Things built outside paid work. Honest list — only ship what's real.
@@ -292,11 +315,54 @@ export const SIDE_PROJECTS: SideProject[] = [
   {
     id: "02",
     name: "Diamond Hand",
-    tag: "Python · Claude API · Hyperliquid · Streamlit",
+    tag: "Quantitative · Live execution · Risk management",
     description:
-      "Self-improving crypto trading system. A Claude-powered post-trade analyst grades every closed trade, writes rules into a learned-rules file, and the signal screener reads them before approving the next entry. Multi-strategy scanners (incl. liquidity sweep), per-strategy backtester, regime filter, and live execution on Hyperliquid perps.",
+      "A live, fully-automated crypto trading system that watches the market 24/7 and learns from its own outcomes. Multi-strategy, risk-budgeted, and built like production software.",
     status: "Private · Live",
     logo: "bitcoin",
+    slug: "diamond-hand",
+    href: "/lab/diamond-hand",
+    year: "2025 — present",
+    role: "Solo build",
+    accent: "#ffb547",
+    summary:
+      "A live, fully-automated crypto trading system that learns from its own outcomes.",
+    context:
+      "Diamond Hand started as a question — can a backend engineer build a trading system that consistently makes good decisions, without giving up the discipline a human keeps trying to break? It's been running ever since, and it's grown into a sizable codebase that watches the market 24/7 across multiple strategies and only acts when several independent layers agree.",
+    problem:
+      "Discretionary trading falls apart the moment emotions get involved. The hard part isn't writing strategies — it's removing yourself from them. The system had to be opinionated, evidence-driven, and incapable of overriding its own rules at three in the morning.",
+    approach: [
+      {
+        heading: "Many strategies, one risk budget",
+        body: "Several independent scanners run in parallel, each with its own thesis. They share a single risk envelope, and a multi-layer circuit breaker halts new entries the moment daily or weekly drawdown limits hit — so the portfolio can't accidentally double down on the same idea or bleed out on a bad day.",
+      },
+      {
+        heading: "Every signal gets a second opinion",
+        body: "Each candidate trade passes through a validation layer that checks regime fit, recent performance on the same symbol, position concentration, and patterns learned from prior trades. If anything's off the trade is downsized or skipped — and there's a hard veto on coin / direction combinations that have lost too many times in a row.",
+      },
+      {
+        heading: "Self-improving by design",
+        body: "Every closed trade is reviewed and graded by an analyst layer that turns observations into hard rules. Those rules feed back into the signal screener before the next entry. Wins reinforce; losses tighten the screen.",
+      },
+      {
+        heading: "Validated before it ships",
+        body: "Each strategy survives walk-forward testing across years of historical data, with statistical-significance tests gating every change. Pre-commit review catches look-ahead bias and repaint risk before code lands. Nothing goes live without a paper run alongside it for proof.",
+      },
+      {
+        heading: "Built like production software",
+        body: "Same engineering discipline I bring to platforms at work — auto-restart, structured journaling, real-time dashboards, alerting straight to my phone, and observability you can actually use. No silent failures.",
+      },
+    ],
+    outcome:
+      "A trading system that's been running for months — disciplined, evidence-driven, and getting smarter every cycle. The latest variant is currently paper-trading at an 85% win rate before it gets promoted to live capital.",
+    metrics: [
+      { value: "85%", label: "win rate · latest paper run" },
+      { value: "Live", label: "production since 2025" },
+      { value: "24/7", label: "autonomous & journaled" },
+    ],
+    liveUrl: "https://trade.houmaneskandani.com",
+    liveLabel: "Open live console",
+    liveNote: "trade.houmaneskandani.com",
   },
 ];
 
