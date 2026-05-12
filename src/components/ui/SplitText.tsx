@@ -58,9 +58,13 @@ export function SplitText({
   return (
     <span ref={ref} className={cn("inline-block", className)}>
       {words.map((word, wi) => (
+        // pb/mb pair: gives the `overflow-hidden` clip box ~0.2em of extra
+        // height so descenders (g, j, p, q, y) aren't clipped at tight
+        // line-heights like .text-display's 0.92. The matching negative
+        // margin keeps the visible layout identical.
         <span
           key={wi}
-          className="inline-block overflow-hidden align-bottom mr-[0.25em]"
+          className="inline-block overflow-hidden align-bottom mr-[0.25em] pb-[0.2em] mb-[-0.2em]"
         >
           <motion.span
             className="inline-block will-change-transform"
