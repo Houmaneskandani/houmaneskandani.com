@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Navbar } from "@/components/nav/Navbar";
@@ -43,6 +43,15 @@ export default async function ProjectPage({
   const { slug } = await params;
   const project = PROJECTS.find((p) => p.slug === slug);
   if (!project) notFound();
+
+  // If this project's canonical detail page lives elsewhere (e.g. Diamond
+  // Hand's case study lives at /lab/diamond-hand with the live-console
+  // CTA), redirect there instead of rendering a half-empty /work/<slug>
+  // page. `generateStaticParams` already excludes these from the build,
+  // but Next.js still renders dynamically on direct hit unless we redirect.
+  if (project.href && !project.href.startsWith("/work/")) {
+    redirect(project.href);
+  }
 
   const idx = PROJECTS.findIndex((p) => p.slug === slug);
   const next = PROJECTS[(idx + 1) % PROJECTS.length];
