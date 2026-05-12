@@ -95,6 +95,22 @@ export const PROJECTS: Project[] = [
   },
   {
     id: "02",
+    slug: "diamond-hand",
+    title: "Diamond Hand — autonomous crypto trading system",
+    client: "Personal project",
+    year: "2025 — present",
+    role: "Solo build",
+    tags: ["Quantitative", "Live execution", "Risk management"],
+    summary:
+      "A live, fully-automated crypto trading system that watches the market 24/7 and learns from its own outcomes. Multi-strategy, risk-budgeted, and built like production software.",
+    accent: "#ffb547",
+    // Detail page lives at `/lab/diamond-hand` (case study + live console CTA).
+    // Setting `href` makes the homepage tile link there directly and skips
+    // the auto-generated `/work/diamond-hand` page.
+    href: "/lab/diamond-hand",
+  },
+  {
+    id: "03",
     slug: "card-personalization-platform",
     title: "Card personalization platform",
     client: "IDEMIA",
@@ -135,7 +151,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "03",
+    id: "04",
     slug: "applyagent",
     title: "ApplyAgent — AI job application agent",
     client: "Personal project",
@@ -173,7 +189,7 @@ export const PROJECTS: Project[] = [
     ],
   },
   {
-    id: "04",
+    id: "05",
     slug: "spotlist-marketplace",
     title: "Expert–client mobile marketplace",
     client: "Spotlist Inc",

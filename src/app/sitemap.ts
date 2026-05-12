@@ -26,14 +26,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.8,
     },
-    ...PROJECTS.map((p) => ({
-      url: `${SITE.url}/work/${p.slug}`,
-      lastModified: projectLastModified(p),
-      changeFrequency: /present/i.test(p.year)
-        ? ("monthly" as const)
-        : ("yearly" as const),
-      priority: 0.7,
-    })),
+    ...PROJECTS
+      .filter((p) => !p.href || p.href.startsWith("/work/"))
+      .map((p) => ({
+        url: `${SITE.url}/work/${p.slug}`,
+        lastModified: projectLastModified(p),
+        changeFrequency: /present/i.test(p.year)
+          ? ("monthly" as const)
+          : ("yearly" as const),
+        priority: 0.7,
+      })),
     ...SIDE_PROJECTS.filter((p) => p.slug).map((p) => ({
       url: `${SITE.url}/lab/${p.slug}`,
       lastModified: now,
