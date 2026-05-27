@@ -190,7 +190,7 @@ function PhotoSlot() {
   return (
     <div
       ref={wrapRef}
-      className="group relative aspect-[4/5] overflow-hidden rounded-md border border-(--color-line) bg-(--color-bg-elev)"
+      className="group relative aspect-square overflow-hidden rounded-md border border-(--color-line) bg-(--color-bg-elev)"
     >
       {hasPortrait ? (
         <>
