@@ -7,6 +7,9 @@ export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="relative w-full overflow-hidden border-t border-(--color-line) bg-(--color-bg-elev)">
+      {/* Marquee — used to say "Open to backend & platform roles" which read
+          as a job-search pitch. Replaced with name + email (just identity,
+          no solicitation) so the footer reads as a portfolio's sign-off. */}
       <Marquee speed={30} className="border-b border-(--color-line) py-8">
         {Array.from({ length: 8 }).map((_, i) => (
           <span
@@ -14,7 +17,7 @@ export function Footer() {
             className="mx-6 inline-flex items-center gap-6 text-display text-2xl text-(--color-fg)/80 md:text-3xl"
           >
             <span className="text-(--color-accent)">✺</span>
-            Open to backend & platform roles
+            {SITE.name}
             <span className="text-(--color-accent)">✺</span>
             {SITE.email}
           </span>

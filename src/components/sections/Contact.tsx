@@ -91,15 +91,18 @@ export function Contact() {
         </p>
 
         <motion.div style={{ scale, opacity }} className="origin-left">
+          {/* Was: "Hiring a backend engineer? Let's talk." — softened to a
+              neutral portfolio invitation so the page doesn't read as a
+              job-search pitch. */}
           <h2 className="text-display text-[14vw] leading-[0.9] md:text-[11vw]">
-            <SplitText text="Hiring a" className="block" />
+            <SplitText text="Say" className="block" />
             <SplitText
-              text="backend engineer?"
+              text="hello."
               className="block text-(--color-accent)"
               delay={0.05}
             />
             <SplitText
-              text="Let's talk."
+              text="I'll reply."
               className="block opacity-80"
               delay={0.1}
             />
@@ -178,8 +181,7 @@ export function Contact() {
               ))}
             </div>
             <p className="mt-6 max-w-xs text-right text-xs text-(--color-muted)">
-              Based in {SITE.location}. Open to remote, hybrid, or on-site
-              backend / platform roles.
+              Based in {SITE.location}.
             </p>
           </div>
         </div>
