@@ -1,25 +1,26 @@
 import { Navbar } from "@/components/nav/Navbar";
-import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Work } from "@/components/sections/Work";
 import { Capabilities } from "@/components/sections/Capabilities";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
-import { PersistentDrop } from "@/components/three/PersistentDrop";
+import { ParticleNameHero } from "@/components/three/ParticleNameHero";
 
 export default function HomePage() {
   return (
-    <>
-      <PersistentDrop />
-      <main className="relative z-10">
-        <Navbar />
-        <Hero />
-        <About />
-        <Work />
-        <Capabilities />
-        <Contact />
-        <Footer />
-      </main>
-    </>
+    <main className="relative">
+      <Navbar />
+      {/* Single-screen hero — particles assemble into "HOUMAN" with mouse
+          physics (push them around, watch them spring back). Replaces the
+          earlier cinematic <RequestJourney /> scroll hero, which felt too
+          busy. To revert: swap this import + tag back to RequestJourney —
+          the file is preserved at src/components/three/RequestJourney.tsx. */}
+      <ParticleNameHero />
+      <About />
+      <Work />
+      <Capabilities />
+      <Contact />
+      <Footer />
+    </main>
   );
 }
