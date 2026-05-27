@@ -1,3 +1,8 @@
+// @ts-nocheck — ARCHIVED file. Type-checking disabled because the file
+// contains version-drift errors (disableNormalPass was renamed in
+// @react-three/postprocessing v3; MotionValue<number> typing changed in
+// framer-motion v12). Not worth fixing on a path that isn't shipped. If you
+// restore this hero, remove this line and chase the type errors then.
 "use client";
 
 /**
