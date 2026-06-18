@@ -8,7 +8,6 @@ export const SITE = {
     "Currently at The Vport, working on the GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
   email: "eskandanihouman@gmail.com",
   location: "Irvine, CA · Remote-friendly",
-  // Will host at houmaneskandani.com once DNS is pointed at Vercel.
   domain: "houmaneskandani.com",
   url: "https://houmaneskandani.com",
   resume: "/houman-eskandani-resume.pdf",
@@ -258,11 +257,14 @@ export const CAPABILITIES: Capability[] = [
   },
 ];
 
-export const NAV = [
+export type NavItem = { label: string; href: string; external?: boolean };
+
+export const NAV: NavItem[] = [
   { label: "Work", href: "/#work" },
   { label: "About", href: "/#about" },
   { label: "Side projects", href: "/lab" },
   { label: "Contact", href: "/#contact" },
+  { label: "Résumé ↗", href: SITE.resume, external: true },
 ];
 
 export type SideProject = {

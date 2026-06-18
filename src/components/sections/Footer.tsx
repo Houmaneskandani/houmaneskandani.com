@@ -51,6 +51,16 @@ export function Footer() {
                 LinkedIn ↗
               </a>
             </li>
+            <li>
+              <a
+                className="hover:text-(--color-accent)"
+                href={SITE.resume}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Résumé ↗
+              </a>
+            </li>
           </ul>
         </div>
 
