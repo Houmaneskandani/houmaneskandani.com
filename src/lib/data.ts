@@ -360,9 +360,9 @@ export const SIDE_PROJECTS: SideProject[] = [
       },
     ],
     outcome:
-      "A trading system that's been running for months — disciplined, evidence-driven, and getting smarter every cycle. The latest variant is currently paper-trading at an 85% win rate before it gets promoted to live capital.",
+      "A trading system that's been running for months — disciplined, evidence-driven, and getting smarter every cycle. The latest variant is currently paper-trading at a 65% win rate before it gets promoted to live capital.",
     metrics: [
-      { value: "85%", label: "win rate · latest paper run" },
+      { value: "65%", label: "win rate · latest paper run" },
       { value: "Live", label: "production since 2025" },
       { value: "24/7", label: "autonomous & journaled" },
     ],
