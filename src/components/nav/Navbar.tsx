@@ -72,6 +72,7 @@ export function Navbar() {
               <li key={item.href}>
                 <MagneticButton
                   href={item.href}
+                  external={item.external}
                   strength={0.25}
                   cursorLabel="GO"
                   className="px-4 py-2 text-sm text-fg hover:text-(--color-accent) transition-colors"

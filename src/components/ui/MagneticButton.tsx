@@ -12,6 +12,8 @@ type Props = {
   className?: string;
   strength?: number;
   cursorLabel?: string;
+  /** Open in a new tab (e.g. the résumé PDF) so the site stays put. */
+  external?: boolean;
 };
 
 export function MagneticButton({
@@ -21,6 +23,7 @@ export function MagneticButton({
   className,
   strength = 0.3,
   cursorLabel,
+  external,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -62,8 +65,11 @@ export function MagneticButton({
   );
 
   if (href) {
+    const externalProps = external
+      ? { target: "_blank", rel: "noopener noreferrer" }
+      : {};
     return (
-      <a href={href} onClick={onClick} className="inline-block">
+      <a href={href} onClick={onClick} className="inline-block" {...externalProps}>
         {inner}
       </a>
     );

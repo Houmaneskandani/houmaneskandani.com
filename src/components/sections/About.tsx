@@ -104,10 +104,9 @@ export function About() {
           </div>
 
           <Reveal delay={0.18} className="mt-16">
-            <ul className="grid grid-cols-2 gap-y-6 border-t border-(--color-line) pt-8 md:grid-cols-4">
+            <ul className="grid grid-cols-2 gap-y-6 border-t border-(--color-line) pt-8 md:grid-cols-3">
               {[
                 ["5+", "yrs in backend"],
-                ["Zero-downtime", "deploys"],
                 ["Tier-1", "banking clients"],
                 ["Multi-tenant", "GraphQL platform"],
               ].map(([n, label]) => (
