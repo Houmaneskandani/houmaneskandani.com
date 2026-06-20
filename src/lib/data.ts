@@ -370,6 +370,150 @@ export const SIDE_PROJECTS: SideProject[] = [
     liveLabel: "Open live console",
     liveNote: "trade.houmaneskandani.com",
   },
+  {
+    id: "03",
+    name: "Marketing Agent (Paperclip)",
+    tag: "Multi-tenant SaaS · AI agents · Security",
+    description:
+      "A from-scratch, multi-tenant marketing & CRM SaaS for medical practices, reimagined as a team of nine cooperating AI agents — lead capture to AI follow-up to booking, sealed off per practice. Built with a practicing physician as domain advisor.",
+    status: "Pre-launch · onboarding first practice",
+    slug: "marketing-agent",
+    href: "/lab/marketing-agent",
+    year: "2026",
+    role: "Solo build",
+    accent: "#ff5c8a",
+    summary:
+      "A multi-tenant marketing & CRM SaaS reimagined as a team of cooperating AI agents.",
+    context:
+      "The Marketing Agent started with a practicing physician and a simple frustration: the all-in-one marketing tools every clinic pays for (the GoHighLevel category) are really just static if-this-then-that builders. I wanted to know what that same product looks like when the automation engine is a roster of reasoning agents instead — so I built one, multi-tenant from the first line.",
+    problem:
+      "An all-in-one CRM for medical practices is a multi-tenant problem before it's an AI problem: every lead, message, and booking has to stay sealed inside the practice it belongs to — even when autonomous agents, not humans, are the ones reading and writing the data. Getting that isolation right under an agent threat model was the whole game.",
+    approach: [
+      {
+        heading: "Multi-tenant from day one",
+        body: "A 13-table Postgres schema where every row is scoped to a tenant, modeled as a Clerk Organization. Isolation is enforced at both the data layer and the API layer, so a new endpoint can't accidentally leak across practices.",
+      },
+      {
+        heading: "A company of agents, not a workflow builder",
+        body: "Nine specialized agents — follow-up, scheduling, content, SEO, social, reputation, reactivation, insights, and a director — run on an open-source control plane with an org chart, heartbeat scheduling, and budgets. They act only through a constrained skill interface against the CRM, with every action written to an audit log.",
+      },
+      {
+        heading: "Security, caught by adversarial review",
+        body: "An adversarial multi-agent code review surfaced a cross-tenant isolation gap before a single practice was onboarded. I rearchitected agent auth around per-practice hashed API keys — deriving the tenant server-side from the key rather than trusting the request — with ownership checks on every child write.",
+      },
+      {
+        heading: "Real communication, done compliantly",
+        body: "Twilio SMS and Resend email with a signature-validated inbound webhook, STOP/opt-out handling, and per-practice number routing — the unglamorous parts that decide whether a messaging product is allowed to exist.",
+      },
+      {
+        heading: "Correct by construction",
+        body: "Timezone-aware availability plus a Postgres GiST exclusion constraint that makes double-booking impossible at the database level. End-to-end TypeScript with Zod-validated boundaries, Drizzle migrations, and typecheck/build gates on every change.",
+      },
+    ],
+    outcome:
+      "A working first slice — public lead form to AI follow-up to booked appointment — that's clean on typecheck and production build, security-reviewed, and pre-launch with its first practice onboarding.",
+    metrics: [
+      { value: "9", label: "cooperating AI agents" },
+      { value: "Multi-tenant", label: "isolated per practice" },
+      { value: "Pre-launch", label: "first practice onboarding" },
+    ],
+  },
+  {
+    id: "04",
+    name: "MatchYard",
+    tag: "Full-stack · Native iOS · Geospatial",
+    description:
+      "A native SwiftUI iOS app and a TypeScript/PostGIS backend for finding workout & sports partners nearby — geospatial discovery, in-app chat, AI-assisted matchmaking, and a from-scratch auth & safety system. ~38K LOC, 529 automated tests, App Store–ready.",
+    status: "Pre-launch · App Store–ready",
+    slug: "matchyard",
+    href: "/lab/matchyard",
+    year: "2026",
+    role: "Solo build",
+    accent: "#3ddc97",
+    summary:
+      "A native iOS sports-partner finder, built end-to-end — app, backend, and infrastructure.",
+    context:
+      "MatchYard is the app I wanted to exist: open it, see people nearby who want to play the same sport at your level, and message them. I designed the product and brand, then built all of it — a native SwiftUI client, a TypeScript backend, and the infrastructure under both — and deliberately moved it off hosted BaaS onto a first-party stack I actually control.",
+    problem:
+      "A find-people-near-you app lives or dies on two things most weekend projects skip: location queries that are fast and safe, and an auth system you'd actually trust with strangers meeting in person. Both had to be production-grade before a single user signed up.",
+    approach: [
+      {
+        heading: "Native client, stateless backend",
+        body: "SwiftUI on iOS 17 (MVVM, 18 service layers, async/await throughout) against a stateless Express/TypeScript API. PostgreSQL 16 + PostGIS holds the spatial data, Redis backs rate limiting, and the schema evolves through a custom versioned migration runner.",
+      },
+      {
+        heading: "Auth from scratch",
+        body: "First-party JWT auth — access plus rotating refresh tokens, bcrypt, Sign in with Apple over ES256/JWKS, email and SMS OTP — replacing the third-party dependency it started on. Device tokens live only in the Keychain, and a single-flight refresh coalesces parallel 401s into one request so concurrent calls can't race.",
+      },
+      {
+        heading: "Geospatial discovery, safety-aware",
+        body: "Nearby-post queries run on PostGIS with keyset pagination instead of offset scans, and they exclude blocked users in both directions, your own posts, and closed posts — safety baked into the query, not bolted on after.",
+      },
+      {
+        heading: "Graceful AI matchmaking",
+        body: "The Claude API scores candidate matches 0–100, but a deterministic heuristic — sport overlap, skill, distance, availability — keeps matching working if the model is ever unavailable. No hard dependency on the LLM.",
+      },
+      {
+        heading: "Owned the whole pipeline",
+        body: "Multi-stage Docker and docker-compose (Postgres/PostGIS, Redis, API) with healthchecks, GitHub Actions running integration tests against real services rather than mocks, and a Fastlane → TestFlight pipeline. Redis-backed tiered rate limiting, Zod validation, IDOR ownership checks, content moderation, and an audit-logged admin panel round out the hardening.",
+      },
+    ],
+    outcome:
+      "A pre-launch, App Store–ready product — legal, privacy labels, account deletion, and TestFlight pipeline all in place — backed by 529 tests that run against real Postgres and Redis on every push.",
+    metrics: [
+      { value: "~38K", label: "lines, app + backend" },
+      { value: "529", label: "automated tests" },
+      { value: "App Store", label: "submission-ready" },
+    ],
+  },
+  {
+    id: "05",
+    name: "Even G2 Glasses",
+    tag: "Smart glasses · Voice AI · Full-stack",
+    description:
+      "An AI-native suite of voice-driven apps for Even Realities G2 smart glasses — a 1-bit, six-line heads-up display with mic-only input. Hands-free reminders, document Q&A, and live conversation suggestions. ~25K LOC, 332 tests, shipped to a physical device.",
+    status: "Shipped to a physical device",
+    slug: "even-g2",
+    href: "/lab/even-g2",
+    year: "2026",
+    role: "Solo build",
+    accent: "#4d9fff",
+    summary:
+      "A full-stack, on-device AI app platform for Even Realities G2 smart glasses.",
+    context:
+      "The Even Realities G2 is a beautifully constrained device — a 1-bit, six-line monochrome display, a microphone, and a ring gesture, and that's it. I wanted to find out what genuinely useful AI looks like on a surface that small, so I built a whole suite of apps for it: speak a reminder, ask a question grounded in your own documents, get a live reply suggestion mid-conversation — all as glanceable text, in under a second.",
+    problem:
+      "Every assumption a normal app makes is gone: no keyboard, no scrolling, no color, almost no screen. The hard part wasn't the AI — it was making reasoning models feel instant and legible inside 240 characters of monochrome text, on real hardware, without dropping a tap.",
+    approach: [
+      {
+        heading: "A suite, not a demo",
+        body: "Five app modules over one platform: Loop (hands-free voice reminders), Recall (retrieval-augmented Q&A over your own PDFs and docs), Cyrano (real-time conversation suggestions), Capture (voice notes auto-structured by an LLM), and a glanceable trading HUD over a paper-trading system.",
+      },
+      {
+        heading: "Provider-abstracted AI",
+        body: "A single Claude interface with natural-language-to-structured-JSON parsing, RAG (chunking, embeddings, a SQLite vector store, persona system), SSE streaming, prompt caching, and a fast-model tier — plus real-time speech-to-text behind an intent router that decides which app you're talking to.",
+      },
+      {
+        heading: "Full-stack, both ends typed",
+        body: "A FastAPI backend (~8K LOC) with HMAC auth, upload caps, and decompression-bomb guards, and a TypeScript on-device runtime (~12K LOC) driving the 240-character, six-line, 1-bit display. OpenAPI-generated shared types keep the client and server from drifting.",
+      },
+      {
+        heading: "Constrained-device UX",
+        body: "Diagnosed and fixed real input-latency and dropped-tap bugs on the hardware, then rebuilt the flagship around a single-button, optimistically-rendered interaction so it feels instant even while the model is still thinking.",
+      },
+      {
+        heading: "Infrastructure that heals itself",
+        body: "Five self-healing launchd services, an HTTPS Cloudflare named tunnel stood up without disrupting a separate live tunnel on the same account, and a security-locked Telegram control bot — shipped to a physical device through the Even Hub developer portal.",
+      },
+    ],
+    outcome:
+      "A working, on-device AI platform — five app modules, five production services, ~25K lines — installed on real glasses, with 332 tests across 23 suites and an adversarial review that caught a timestamp-comparison bug before it shipped.",
+    metrics: [
+      { value: "~25K", label: "lines, full-stack" },
+      { value: "332", label: "tests / 23 suites" },
+      { value: "On-device", label: "shipped via Even Hub" },
+    ],
+  },
 ];
 
 export type Experience = {
