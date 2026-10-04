@@ -5,7 +5,11 @@ export const SITE = {
   role: "Backend & Cloud Platform Engineer",
   shortRole: "Backend Engineer",
   tagline:
-    "Currently at The Vport, working on the GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I'm building AI agents — most recently ApplyAgent, an autonomous job-application bot powered by Claude.",
+    "Currently at The Vport, working on the GraphQL platform. Three years before that at IDEMIA on a card-personalization platform serving tier-1 U.S. banks. On the side I build with AI — lately voice apps for Even Realities smart glasses, a native iOS sports-partner app, and ApplyAgent, an open-source job-application agent powered by Claude.",
+  // One line under the About paragraphs: what I'm thinking about right now,
+  // as opposed to what I've shipped. Edit freely — it's meant to go stale.
+  currently:
+    "Agents on constrained hardware, multi-tenant isolation when the caller is a model rather than a person, and making LLM-driven automation reliable enough to run unattended.",
   email: "eskandanihouman@gmail.com",
   location: "Irvine, CA · Remote-friendly",
   domain: "houmaneskandani.com",
@@ -74,11 +78,9 @@ export const PROJECTS: Project[] = [
     ],
     outcome:
       "A backend that's easier to reason about, easier to operate, and easier to extend — without growing the team to do it.",
-    metrics: [
-      { value: "Consolidated", label: "security model" },
-      { value: "Small team", label: "operations" },
-      { value: "Production", label: "reliability" },
-    ],
+    // No metrics tiles on purpose: the previous "Consolidated / Small team /
+    // Production" read as stat tiles with nothing in them. Add real numbers
+    // here if/when they can be shared.
   },
   {
     id: "02",
@@ -216,8 +218,8 @@ export const PROJECTS: Project[] = [
       "A backend that survived the startup's first product–market hunt with the same team and the same architecture, just bigger.",
     metrics: [
       { value: "5+", label: "engineers mentored" },
-      { value: "HTTPS", label: "everywhere, day one" },
-      { value: "Lead", label: "backend ownership" },
+      { value: "Stripe", label: "payments & subscriptions" },
+      { value: "First", label: "backend hire → lead" },
     ],
   },
 ];

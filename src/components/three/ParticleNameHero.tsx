@@ -353,7 +353,7 @@ export function ParticleNameHero() {
         <p className="text-eyebrow">
           <span className="text-(--color-accent)">●</span>{" "}
           <span className="ml-2">
-            IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES
+            IRVINE, CA · BACKEND &amp; PLATFORM ENGINEER
           </span>
         </p>
       </div>
@@ -459,7 +459,7 @@ function ReducedFallback() {
         <p className="text-eyebrow">
           <span className="text-(--color-accent)">●</span>{" "}
           <span className="ml-2">
-            IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES
+            IRVINE, CA · BACKEND &amp; PLATFORM ENGINEER
           </span>
         </p>
       </div>

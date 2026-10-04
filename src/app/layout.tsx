@@ -90,7 +90,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Houman Eskandani — Backend & Cloud Platform Engineer",
     description:
-      "Backend, APIs, and cloud platform — Go, GraphQL, Postgres, Kubernetes. Past work at IDEMIA and The Vport.",
+      "Backend, APIs, and cloud platform — Go, GraphQL, Postgres, Kubernetes. Currently at The Vport; previously IDEMIA.",
     type: "website",
     siteName: "Houman Eskandani",
     url: "https://houmaneskandani.com",

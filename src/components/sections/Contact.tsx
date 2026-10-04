@@ -111,7 +111,7 @@ export function Contact() {
 
         <div className="mt-16 grid grid-cols-12 gap-x-6 gap-y-12">
           <div className="col-span-12 md:col-span-7">
-            <p className="text-eyebrow">Direct line</p>
+            <p className="text-eyebrow">Email</p>
             <div data-drop="email" className="relative mt-3">
               <MagneticButton
                 href={`mailto:${SITE.email}`}
@@ -145,7 +145,7 @@ export function Contact() {
               </AnimatePresence>
             </div>
             <p className="mt-4 max-w-md text-sm text-(--color-muted)">
-              Click to copy. Or grab the one-page CV below.
+              Click to copy.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -155,10 +155,10 @@ export function Contact() {
                 className="rounded-full border border-(--color-accent) bg-(--color-accent)/10 px-6 py-3 text-sm text-(--color-accent) transition-colors hover:bg-(--color-accent) hover:text-bg"
               >
                 <span className="inline-flex items-center gap-2">
-                  Download CV <span aria-hidden>↓</span>
+                  Résumé (PDF) <span aria-hidden>↓</span>
                 </span>
               </MagneticButton>
-              <span className="text-eyebrow">PDF · 1 page · 2026</span>
+              <span className="text-eyebrow">1 page · 2026</span>
             </div>
           </div>
 

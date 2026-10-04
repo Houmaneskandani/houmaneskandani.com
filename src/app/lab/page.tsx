@@ -62,8 +62,7 @@ export default function SideProjectsPage() {
         <div className="mx-auto w-full max-w-[1400px]">
           <Reveal>
             <p className="text-eyebrow">
-              <span className="text-(--color-accent)">(02)</span> Currently
-              shipping
+              <span className="text-(--color-accent)">(02)</span> Projects
             </p>
           </Reveal>
 
@@ -128,6 +127,21 @@ export default function SideProjectsPage() {
                       className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-(--color-accent) transition-transform duration-700 group-hover:scale-x-100"
                     />
                   </Link>
+                  {/* When a project has BOTH a case study and a public repo,
+                      the card links to the case study and the repo was only
+                      reachable from inside it. Surface it here too (a sibling
+                      of the card link — anchors can't nest). */}
+                  {p.href && p.external ? (
+                    <a
+                      href={p.external}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-cursor="VISIT"
+                      className="absolute bottom-5 right-1 hidden text-eyebrow transition-colors hover:text-(--color-accent) md:block"
+                    >
+                      GitHub ↗
+                    </a>
+                  ) : null}
                 </li>
               </Reveal>
             ))}
@@ -137,7 +151,7 @@ export default function SideProjectsPage() {
 
       <section className="relative w-full px-6 pb-24 md:px-10 md:pb-32">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 border-t border-(--color-line) pt-10 md:flex-row md:items-end md:justify-between">
-          <p className="text-eyebrow">More on the way</p>
+          <p className="text-eyebrow">More soon</p>
           <Link
             href="/"
             data-cursor="HOME"

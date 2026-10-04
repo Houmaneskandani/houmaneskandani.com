@@ -5,17 +5,20 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SplitText } from "@/components/ui/SplitText";
 import { Marquee } from "@/components/ui/Marquee";
 
+// Only things that appear in CAPABILITIES or a case study on this site —
+// the previous list claimed Kafka / ClickHouse / event-driven architecture,
+// none of which show up anywhere else here.
 const MARQUEE_ITEMS = [
   "Distributed systems",
-  "Event-driven architecture",
-  "Postgres internals",
-  "Kafka",
-  "ClickHouse",
+  "GraphQL",
   "gRPC",
+  "Postgres & PostGIS",
+  "Kubernetes",
+  "Multi-tenancy",
   "Idempotency",
-  "Backpressure",
   "Observability",
-  "Performance tuning",
+  "PCI-DSS",
+  "LLM agents",
 ];
 
 export function Capabilities() {
