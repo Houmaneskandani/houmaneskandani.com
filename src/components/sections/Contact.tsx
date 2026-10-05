@@ -70,6 +70,8 @@ export function Contact() {
     try {
       await navigator.clipboard.writeText(SITE.email);
       setCopied(true);
+      // Let the on-page agent react (it celebrates a copied email).
+      window.dispatchEvent(new CustomEvent("orbit:email-copied"));
       setBurst({ x: e.clientX, y: e.clientY, key: Date.now() });
       window.setTimeout(() => setCopied(false), 1800);
       window.setTimeout(() => setBurst(null), 800);

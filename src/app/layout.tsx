@@ -5,6 +5,7 @@ import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { CustomCursor } from "@/components/cursor/CustomCursor";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { Preloader } from "@/components/transitions/Preloader";
+import { OrbitMount } from "@/components/agent/OrbitMount";
 import { SITE } from "@/lib/data";
 import "./globals.css";
 
@@ -146,6 +147,10 @@ export default function RootLayout({
           <div aria-hidden className="grain" />
         </SmoothScroll>
         <Preloader />
+        {/* Orbit — the on-page agent. Lives in the root layout so it
+            persists across route changes (and so can finish a cross-page
+            navigation it started). */}
+        <OrbitMount />
         <CustomCursor />
         <Analytics />
       </body>

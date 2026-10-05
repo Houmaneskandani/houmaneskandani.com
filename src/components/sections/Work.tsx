@@ -48,6 +48,7 @@ export function Work() {
             <li
               key={p.id}
               data-drop="project"
+              data-agent-id={`project:${p.slug}`}
               onMouseEnter={() => setHovered(p)}
               onMouseLeave={() => setHovered(null)}
               className="group relative border-b border-(--color-line)"

@@ -47,9 +47,22 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
     };
     document.addEventListener("click", onAnchor);
 
+    // Programmatic smooth scroll for the on-page agent (Orbit). It can't
+    // reach the Lenis instance directly, so it asks via a DOM event and
+    // gets the same easing the rest of the site uses.
+    const onAgentScroll = (e: Event) => {
+      const { selector, offset } = (e as CustomEvent<{ selector: string; offset?: number }>).detail ?? {};
+      if (!selector) return;
+      const el = document.querySelector<HTMLElement>(selector);
+      if (!el) return;
+      lenis.scrollTo(el, { offset: offset ?? -120, duration: 1.4 });
+    };
+    window.addEventListener("orbit:scroll", onAgentScroll);
+
     return () => {
       cancelAnimationFrame(rafId);
       document.removeEventListener("click", onAnchor);
+      window.removeEventListener("orbit:scroll", onAgentScroll);
       lenis.destroy();
       document.documentElement.classList.remove("lenis", "lenis-smooth");
     };

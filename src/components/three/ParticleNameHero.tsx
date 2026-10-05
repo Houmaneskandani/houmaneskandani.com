@@ -418,7 +418,7 @@ export function ParticleNameHero() {
                 <span className="absolute inset-x-0 -top-full block h-full bg-(--color-accent) [animation:scroll-cue_2.4s_var(--ease-expo-out)_infinite]" />
               </span>
             </a>
-            <div className="hidden text-right text-eyebrow md:block">
+            <div className="hidden text-right text-eyebrow md:block md:pr-24">
               <p className="opacity-60">Currently at</p>
               <p className="mt-1 text-(--color-fg)">
                 The Vport · IDEMIA before that

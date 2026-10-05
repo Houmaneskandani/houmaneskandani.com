@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
 import { SplitText } from "@/components/ui/SplitText";
 import { EXPERIENCE, EDUCATION, SITE } from "@/lib/data";
+import { experienceTargetId } from "@/lib/agent/siteIndex";
 
 export function About() {
   const ref = useRef<HTMLDivElement>(null);
@@ -133,6 +134,7 @@ export function About() {
                 <li
                   key={`${e.company}-${e.period}`}
                   data-drop="experience"
+                  data-agent-id={experienceTargetId(e)}
                   className="grid grid-cols-12 gap-x-6 py-5"
                 >
                   <span className="col-span-3 text-sm text-(--color-muted) md:col-span-2">

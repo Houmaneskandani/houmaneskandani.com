@@ -124,6 +124,14 @@ html.lenis body {
   animation: blink 1.05s steps(1) infinite;
 }
 
+/* Orbit (on-page agent): ring + particle rotation. Duration is set inline
+   per mood; reduced-motion users get no rotation at all. */
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
