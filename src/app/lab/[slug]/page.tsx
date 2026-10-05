@@ -232,10 +232,10 @@ export default async function LabCasePage({
                     className="inline-block h-1.5 w-1.5 rounded-full blink"
                     style={{ background: accent }}
                   />
-                  RUNNING NOW
+                  LIVE
                 </p>
                 <h2 className="mt-4 text-display text-4xl leading-[1.02] md:text-7xl">
-                  See it in action.
+                  Watch it run.
                 </h2>
                 <p className="mt-6 max-w-2xl text-base leading-relaxed text-(--color-muted) md:text-lg">
                   The live console runs 24/7 — open positions, recent moves,

@@ -7,9 +7,9 @@ export function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="relative w-full overflow-hidden border-t border-(--color-line) bg-(--color-bg-elev)">
-      {/* Marquee — used to say "Open to backend & platform roles" which read
-          as a job-search pitch. Replaced with name + email (just identity,
-          no solicitation) so the footer reads as a portfolio's sign-off. */}
+      {/* Marquee — used to say "Open to backend & platform roles" (a job-search
+          pitch), then name + email (read as a contact billboard). Now name +
+          role: pure identity, so the footer is a portfolio sign-off. */}
       <Marquee speed={30} className="border-b border-(--color-line) py-8">
         {Array.from({ length: 8 }).map((_, i) => (
           <span
@@ -19,7 +19,7 @@ export function Footer() {
             <span className="text-(--color-accent)">✺</span>
             {SITE.name}
             <span className="text-(--color-accent)">✺</span>
-            {SITE.email}
+            {SITE.role}
           </span>
         ))}
       </Marquee>
@@ -33,7 +33,7 @@ export function Footer() {
         </div>
 
         <div className="col-span-6 md:col-span-3">
-          <p className="text-eyebrow">Find</p>
+          <p className="text-eyebrow">Elsewhere</p>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <a
@@ -65,7 +65,7 @@ export function Footer() {
         </div>
 
         <div className="col-span-6 md:col-span-3">
-          <p className="text-eyebrow">Reach</p>
+          <p className="text-eyebrow">Email</p>
           <ul className="mt-4 space-y-2 text-sm">
             <li>
               <a

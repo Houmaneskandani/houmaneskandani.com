@@ -5,7 +5,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import { Reveal } from "@/components/ui/Reveal";
 import { SplitText } from "@/components/ui/SplitText";
-import { EXPERIENCE, EDUCATION } from "@/lib/data";
+import { EXPERIENCE, EDUCATION, SITE } from "@/lib/data";
 
 export function About() {
   const ref = useRef<HTMLDivElement>(null);
@@ -79,7 +79,9 @@ export function About() {
               </Reveal>
               <Reveal delay={0.14} className="mt-5">
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
-                  On the side I build with AI. Most recently{" "}
+                  On the side I build with AI — lately a suite of voice-driven
+                  apps for Even Realities smart glasses, a native iOS
+                  sports-partner finder, and{" "}
                   <a
                     href="https://github.com/Houmaneskandani/ApplyAgent"
                     target="_blank"
@@ -88,9 +90,8 @@ export function About() {
                   >
                     ApplyAgent
                   </a>
-                  , an autonomous agent that fills out and submits real job
-                  applications by reasoning over live DOM with Claude and
-                  Playwright.
+                  , an open-source agent that fills out real job applications
+                  by reasoning over live DOM with Claude and Playwright.
                 </p>
               </Reveal>
               <Reveal delay={0.21} className="mt-5">
@@ -98,6 +99,12 @@ export function About() {
                   I obsess over the boring guarantees — idempotency,
                   ordering, durability — because that&apos;s where products
                   live or die at scale.
+                </p>
+              </Reveal>
+              <Reveal delay={0.26} className="mt-8">
+                <p className="text-eyebrow">Currently exploring</p>
+                <p className="mt-2 text-sm leading-relaxed text-(--color-muted) md:text-base">
+                  {SITE.currently}
                 </p>
               </Reveal>
             </div>

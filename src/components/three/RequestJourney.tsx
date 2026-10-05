@@ -600,7 +600,7 @@ export function RequestJourney() {
           <p className="text-eyebrow">
             <span className="text-(--color-accent)">●</span>{" "}
             <span className="ml-2">
-              IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES
+              IRVINE, CA · BACKEND &amp; PLATFORM ENGINEER
             </span>
           </p>
         </div>
@@ -709,7 +709,7 @@ function ReducedFallback() {
       </h1>
       <p className="text-eyebrow mb-8">
         <span className="text-(--color-accent)">●</span>{" "}
-        <span className="ml-2">IRVINE, CA · OPEN TO BACKEND / PLATFORM ROLES</span>
+        <span className="ml-2">IRVINE, CA · BACKEND &amp; PLATFORM ENGINEER</span>
       </p>
       <p className="text-display text-3xl md:text-5xl">
         <span className="text-(--color-accent)">Backend is the invisible roads.</span>

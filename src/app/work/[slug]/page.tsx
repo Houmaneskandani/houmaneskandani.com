@@ -79,10 +79,18 @@ export default async function ProjectPage({
             <SplitText text={project.title} className="block" />
           </h1>
 
+          {/* These were employers, not clients — "Client ·" read like agency
+              work. Personal projects just say so, without a label. */}
           {project.client ? (
             <p className="mt-4 text-eyebrow">
-              <span className="text-(--color-fg)">Client · </span>
-              <span>{project.client}</span>
+              {project.client === "Personal project" ? (
+                <span>{project.client}</span>
+              ) : (
+                <>
+                  <span className="text-(--color-fg)">Company · </span>
+                  <span>{project.client}</span>
+                </>
+              )}
             </p>
           ) : null}
 
