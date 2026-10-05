@@ -6,6 +6,7 @@ import { SplitText } from "@/components/ui/SplitText";
 import { Reveal } from "@/components/ui/Reveal";
 import { SIDE_PROJECTS } from "@/lib/data";
 import { SideProjectLogo } from "@/components/brand/SideProjectLogo";
+import { sideTargetId } from "@/lib/agent/siteIndex";
 
 export const metadata: Metadata = {
   title: "Side projects — Houman Eskandani",
@@ -69,7 +70,10 @@ export default function SideProjectsPage() {
           <ul className="mt-12 border-t border-(--color-line)">
             {SIDE_PROJECTS.map((p, i) => (
               <Reveal key={p.id} delay={i * 0.05}>
-                <li className="group relative border-b border-(--color-line)">
+                <li
+                  className="group relative border-b border-(--color-line)"
+                  data-agent-id={sideTargetId(p.name)}
+                >
                   <Link
                     href={p.href ?? p.external ?? "#"}
                     target={p.href ? undefined : "_blank"}

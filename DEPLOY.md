@@ -2,6 +2,29 @@
 
 End-to-end checklist to take this repo from local to live at your real domain.
 
+## Orbit (the on-page agent) — environment variables
+
+Orbit is the glowing agent in the bottom-right corner. It runs on Claude
+through `src/app/api/agent/route.ts`. Without a key it still works, on a
+small built-in "offline brain" (canned answers + the same page actions),
+and the chat header says so. To turn the real model on, add these in
+**Vercel → Project → Settings → Environment Variables** (Production +
+Preview), then redeploy:
+
+| Variable | Required | Default | What it does |
+| --- | --- | --- | --- |
+| `ANTHROPIC_API_KEY` | yes, for the real agent | — | Server-only. Never exposed to the browser. |
+| `AGENT_MODEL` | no | `claude-opus-5-5` | Any current Claude model id. |
+| `AGENT_DAILY_CAP` | no | `400` | Max model calls per UTC day (per server instance). `0` turns the model off. |
+
+Cost control that is already built in: short replies (system prompt caps
+them), low thinking effort, prompt caching on the site dossier, a per-visitor
+token bucket (5 burst, 2/min), the daily cap above, and the Anthropic
+console spend limit you set yourself. Rough cost per answered question is a
+few cents; a quiet portfolio month is single-digit dollars.
+
+Run the unit tests for the agent with `npm test`.
+
 ---
 
 ## Prereqs
