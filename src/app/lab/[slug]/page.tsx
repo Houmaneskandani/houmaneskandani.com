@@ -14,7 +14,7 @@ const ProjectHero = dynamic(
 );
 
 // Only side projects with their own slug get a `/lab/[slug]` page.
-// Side projects whose `href` points elsewhere (e.g. `/work/applyagent`)
+// Side projects whose `href` points elsewhere (e.g. an external repo)
 // are intentionally excluded.
 const CASE_STUDIES = SIDE_PROJECTS.filter((p) => Boolean(p.slug));
 
@@ -31,7 +31,7 @@ export async function generateMetadata({
   const project = CASE_STUDIES.find((p) => p.slug === slug);
   if (!project) return { title: "Not found" };
   return {
-    title: `${project.name} — Houman Eskandani`,
+    title: `${project.name} | Houman Eskandani`,
     description: project.summary ?? project.description,
   };
 }
@@ -238,7 +238,7 @@ export default async function LabCasePage({
                   Watch it run.
                 </h2>
                 <p className="mt-6 max-w-2xl text-base leading-relaxed text-(--color-muted) md:text-lg">
-                  The live console runs 24/7 — open positions, recent moves,
+                  The live console runs 24/7: open positions, recent moves,
                   and system health, all updating in real time.
                 </p>
               </Reveal>

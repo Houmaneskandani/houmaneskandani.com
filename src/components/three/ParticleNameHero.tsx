@@ -369,7 +369,7 @@ export function ParticleNameHero() {
           {/* SEO-friendly h1 — invisible to sighted users, read by screen
               readers and search engines. */}
           <span className="sr-only">
-            Houman Eskandani — Backend &amp; Cloud Platform Engineer. Building
+            Houman Eskandani, Backend &amp; Cloud Platform Engineer. Building
             high-security, multi-tenant APIs and cloud platforms in Go,
             GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently
             shipping the GraphQL platform at The Vport; previously at IDEMIA
@@ -467,7 +467,7 @@ function ReducedFallback() {
       <div className="relative mx-auto w-full max-w-[1400px]">
         <h1 className="text-display text-[11vw] leading-[0.92] md:text-[7.5vw]">
           <span className="sr-only">
-            Houman Eskandani — Backend &amp; Cloud Platform Engineer. Building
+            Houman Eskandani, Backend &amp; Cloud Platform Engineer. Building
             high-security, multi-tenant APIs and cloud platforms in Go,
             GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently
             shipping the GraphQL platform at The Vport; previously at IDEMIA

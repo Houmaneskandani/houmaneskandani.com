@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
         destination: "/work/vport-platform",
         permanent: true,
       },
+      {
+        source: "/work/applyagent",
+        destination: "/lab/applyagent",
+        permanent: true,
+      },
+      {
+        source: "/lab/even-g2",
+        destination: "/lab",
+        permanent: true,
+      },
     ];
   },
 };

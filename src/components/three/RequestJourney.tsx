@@ -573,11 +573,11 @@ export function RequestJourney() {
     <section
       ref={containerRef}
       className="relative h-[500vh] w-full"
-      aria-label="Hero — a request's journey through middleware, auth, database, and back"
+      aria-label="Hero: a request's journey through middleware, auth, database, and back"
     >
       {/* SR-only heading preserves the SEO copy the previous Hero had. */}
       <h1 className="sr-only">
-        Houman Eskandani — Backend &amp; Cloud Platform Engineer.
+        Houman Eskandani, Backend &amp; Cloud Platform Engineer.
         Building high-security, multi-tenant APIs and cloud platforms in Go,
         GraphQL, Python, Java, PostgreSQL, and Kubernetes. Currently shipping
         the GraphQL platform at The Vport; previously at IDEMIA on a
@@ -701,7 +701,7 @@ function ReducedFallback() {
   return (
     <section className="relative flex min-h-[100svh] w-full flex-col items-center justify-center px-6 py-32 text-center md:px-10">
       <h1 className="sr-only">
-        Houman Eskandani — Backend &amp; Cloud Platform Engineer. Building
+        Houman Eskandani, Backend &amp; Cloud Platform Engineer. Building
         high-security, multi-tenant APIs and cloud platforms in Go, GraphQL,
         Python, Java, PostgreSQL, and Kubernetes. Currently shipping the
         GraphQL platform at The Vport; previously at IDEMIA on a
