@@ -70,7 +70,7 @@ export const PROJECTS: Project[] = [
       },
       {
         heading: "Multi-tenant by construction",
-        body: "Org scoping enforced at the database layer, so one tenant can't read another's data. Extended the catalog APIs with artists, sub-events, signed promotion codes, and ownership transfer, and wrote the user-type policy package that gates creator writes.",
+        body: "Built org scoping into the data layer, so one tenant can't read another's data: added org ownership to tenant tables and split the venue, stage, event, and event-instance queries into org-scoped and public paths, the pattern the codebase now follows in 38 query functions. Later added artist, sub-event, signed promotion-code, and ownership-transfer APIs, and wrote the user-type policy package that gates creator writes.",
       },
       {
         heading: "Production Kubernetes",
