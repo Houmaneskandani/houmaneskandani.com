@@ -27,7 +27,6 @@ const personJsonLd = {
     "API Design",
     "GraphQL",
     "REST",
-    "gRPC",
     "Go",
     "Python",
     "Java",
