@@ -22,6 +22,26 @@ export const SITE = {
   },
 };
 
+/**
+ * Orbit — the on-page agent (src/components/agent). Copy only; behaviour
+ * lives in the components, knowledge is generated from the data in this
+ * file (src/lib/agent/siteIndex.ts).
+ */
+export const AGENT = {
+  name: "Orbit",
+  /** Shown under the name in the chat header. */
+  subtitle: "site agent · on Claude",
+  greeting: "Hi — I'm Orbit. I know this site inside out. Ask me anything about Houman, or just scroll and I'll point things out.",
+  /** First-visit chips. */
+  starters: [
+    "What does he do now?",
+    "Show me the AI projects",
+    "What did he build at IDEMIA?",
+    "How do I contact him?",
+  ],
+  placeholder: "Ask about his work, projects, or how to reach him…",
+};
+
 export type ProjectSection = {
   heading: string;
   body: string;
