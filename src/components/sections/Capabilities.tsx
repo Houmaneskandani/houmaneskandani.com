@@ -12,7 +12,6 @@ const MARQUEE_ITEMS = [
   "Distributed systems",
   "GraphQL",
   "Payments",
-  "gRPC",
   "Postgres & PostGIS",
   "Kubernetes",
   "Multi-tenancy",

@@ -66,7 +66,7 @@ export const PROJECTS: Project[] = [
       },
       {
         heading: "Account security",
-        body: "Two-factor (TOTP) login for users and admins, rate limits on sensitive routes, signing-key rotation with zero user logouts, and deny-by-default access for AI-agent API keys. After a 34-token GraphQL query crashed a pod, I capped parser tokens and validation cost on both APIs.",
+        body: "Two-factor (TOTP) login for users and admins, rate limits on sensitive routes, signing-key rotation with zero user logouts, and deny-by-default access for AI-agent API keys. I also found a 34-token GraphQL query that could crash a pod, and capped parser tokens and validation cost on both APIs.",
       },
       {
         heading: "Multi-tenant by construction",
@@ -209,11 +209,11 @@ export type Capability = {
 export const CAPABILITIES: Capability[] = [
   {
     label: "Languages",
-    items: ["Go", "Python", "Java", "TypeScript", "SQL", "C / C++"],
+    items: ["Go", "Python", "SQL", "TypeScript", "Java"],
   },
   {
     label: "Backend & APIs",
-    items: ["GraphQL (gqlgen)", "REST", "gRPC", "Stripe (Payments, Connect)", "FastAPI", "Django"],
+    items: ["GraphQL (gqlgen)", "REST", "Stripe (Payments, Connect)", "FastAPI", "Django"],
   },
   {
     label: "Data",
