@@ -158,7 +158,7 @@ export function Contact() {
                   Résumé (PDF) <span aria-hidden>↓</span>
                 </span>
               </MagneticButton>
-              <span className="text-eyebrow">1 page · 2026</span>
+              <span className="text-eyebrow">2 pages · 2026</span>
             </div>
           </div>
 

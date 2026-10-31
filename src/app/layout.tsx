@@ -18,7 +18,7 @@ const personJsonLd = {
   url: SITE.url,
   jobTitle: SITE.role,
   description:
-    "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Currently at The Vport on the GraphQL platform; previously at IDEMIA on a card-personalization platform serving tier-1 U.S. banks.",
+    "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Currently at The Vport on payments, authentication, and the GraphQL platform; previously at IDEMIA on a card-personalization platform serving tier-1 U.S. banks.",
   email: `mailto:${SITE.email}`,
   image: `${SITE.url}/portrait.png`,
   sameAs: [SITE.social.github, SITE.social.linkedin],
@@ -39,6 +39,7 @@ const personJsonLd = {
     "OAuth 2.0",
     "JWT",
     "PCI-DSS",
+    "Stripe Payments",
     "Distributed Systems",
     "Cloud Platform Engineering",
   ],
@@ -54,7 +55,7 @@ const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: SITE.name,
-  alternateName: `${SITE.name} — Portfolio`,
+  alternateName: `${SITE.name} Portfolio`,
   url: SITE.url,
   inLanguage: "en-US",
   author: { "@type": "Person", name: SITE.name, url: SITE.url },
@@ -80,7 +81,7 @@ const display = Inter_Tight({
 });
 
 export const metadata: Metadata = {
-  title: "Houman Eskandani — Backend & Cloud Platform Engineer",
+  title: "Houman Eskandani | Backend & Cloud Platform Engineer",
   description:
     "Backend Software Engineer with 5+ years building high-security, multi-tenant APIs in Go, Java, and Python. Cards at IDEMIA, GraphQL platforms at The Vport, AI agents on the side.",
   metadataBase: new URL("https://houmaneskandani.com"),
@@ -88,18 +89,18 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Houman Eskandani — Backend & Cloud Platform Engineer",
+    title: "Houman Eskandani | Backend & Cloud Platform Engineer",
     description:
-      "Backend, APIs, and cloud platform — Go, GraphQL, Postgres, Kubernetes. Currently at The Vport; previously IDEMIA.",
+      "Backend, APIs, and cloud platform: Go, GraphQL, Postgres, Kubernetes. Currently at The Vport; previously IDEMIA.",
     type: "website",
     siteName: "Houman Eskandani",
     url: "https://houmaneskandani.com",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Houman Eskandani — Backend & Cloud Platform Engineer",
+    title: "Houman Eskandani | Backend & Cloud Platform Engineer",
     description:
-      "Personal portfolio of Houman Eskandani — backend, APIs, and cloud platform engineering.",
+      "Personal portfolio of Houman Eskandani: backend, APIs, and cloud platform engineering.",
   },
   icons: {
     icon: "/favicon.ico",

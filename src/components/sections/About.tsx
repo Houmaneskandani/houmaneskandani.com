@@ -37,7 +37,7 @@ export function About() {
           <h2 className="text-display text-[8vw] leading-[1.02] md:text-[5.6vw]">
             <SplitText text="I build the parts most people" className="block" />
             <SplitText
-              text="never see — and feel only when they"
+              text="never see, and feel only when they"
               className="block opacity-80"
               delay={0.05}
             />
@@ -61,43 +61,45 @@ export function About() {
               <Reveal>
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   I&apos;m a backend engineer with 5+ years building
-                  high-security, multi-tenant APIs — most of that time at
-                  IDEMIA, on the card-issuance platform that ships secure
-                  card transactions in production for{" "}
+                  high-security, multi-tenant APIs. Three of those years were
+                  at IDEMIA, on the card-issuance platform that processes 1M+
+                  card records a day for{" "}
                   <span className="text-(--color-fg)">tier-1 U.S. financial
-                  institutions</span>.
+                  institutions</span>, under PCI-DSS.
                 </p>
               </Reveal>
               <Reveal delay={0.07} className="mt-5">
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
                   Today I&apos;m at <span className="text-(--color-fg)">The
-                  Vport</span>, working on the GraphQL platform behind their
-                  VR concert streaming product — backend architecture,
-                  security, and the kind of observability that lets a small
-                  team sleep at night.
+                  Vport</span>, on the Go backend behind their VR concert
+                  streaming product: payments that credit exactly once,
+                  two-factor login for users and admins, multi-tenant GraphQL
+                  APIs, and the production Kubernetes cluster.
                 </p>
               </Reveal>
               <Reveal delay={0.14} className="mt-5">
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
-                  On the side I build with AI — lately a suite of voice-driven
-                  apps for Even Realities smart glasses, a native iOS
-                  sports-partner finder, and{" "}
-                  <a
-                    href="https://github.com/Houmaneskandani/ApplyAgent"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-(--color-fg) underline decoration-(--color-line) underline-offset-4 transition-colors hover:text-(--color-accent) hover:decoration-(--color-accent)"
-                  >
-                    ApplyAgent
+                  On the side I build with AI:{" "}
+                  <a href="/lab/matchyard" className="text-(--color-fg) underline decoration-(--color-line) underline-offset-4 transition-colors hover:text-(--color-accent) hover:decoration-(--color-accent)">
+                    MatchYard
                   </a>
-                  , an open-source agent that fills out real job applications
-                  by reasoning over live DOM with Claude and Playwright.
+                  , a native iOS sports-partner app I built by directing Claude
+                  coding agents, and{" "}
+                  <a href="/lab/diamond-hand" className="text-(--color-fg) underline decoration-(--color-line) underline-offset-4 transition-colors hover:text-(--color-accent) hover:decoration-(--color-accent)">
+                    Diamond Hand
+                  </a>
+                  , a crypto trading system with Claude in the decision loop.
+                  More in the{" "}
+                  <a href="/lab" className="text-(--color-fg) underline decoration-(--color-line) underline-offset-4 transition-colors hover:text-(--color-accent) hover:decoration-(--color-accent)">
+                    lab
+                  </a>
+                  .
                 </p>
               </Reveal>
               <Reveal delay={0.21} className="mt-5">
                 <p className="text-base leading-relaxed text-(--color-muted) md:text-lg">
-                  I obsess over the boring guarantees — idempotency,
-                  ordering, durability — because that&apos;s where products
+                  I obsess over the boring guarantees (idempotency,
+                  ordering, durability) because that&apos;s where products
                   live or die at scale.
                 </p>
               </Reveal>

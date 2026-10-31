@@ -11,6 +11,7 @@ import { Marquee } from "@/components/ui/Marquee";
 const MARQUEE_ITEMS = [
   "Distributed systems",
   "GraphQL",
+  "Payments",
   "gRPC",
   "Postgres & PostGIS",
   "Kubernetes",
@@ -56,7 +57,7 @@ export function Capabilities() {
               />
             </h2>
 
-            <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
               {CAPABILITIES.map((cap, i) => (
                 <Reveal key={cap.label} delay={i * 0.07}>
                   <div data-drop="capability" className="border-t border-(--color-line) pt-6">

@@ -8,9 +8,9 @@ import { SIDE_PROJECTS } from "@/lib/data";
 import { SideProjectLogo } from "@/components/brand/SideProjectLogo";
 
 export const metadata: Metadata = {
-  title: "Side projects — Houman Eskandani",
+  title: "Side projects | Houman Eskandani",
   description:
-    "Backend and AI side projects by Houman Eskandani — including ApplyAgent, an autonomous job-application agent powered by Claude.",
+    "Backend and AI side projects by Houman Eskandani: MatchYard, Diamond Hand, ApplyAgent, and more.",
 };
 
 export default function SideProjectsPage() {
@@ -49,7 +49,7 @@ export default function SideProjectsPage() {
 
           <div className="mt-10 grid grid-cols-12 gap-x-6">
             <p className="col-span-12 max-w-md text-base leading-relaxed text-(--color-muted) md:col-span-5 md:col-start-7 md:text-lg">
-              Most of what I build outside of work is exploratory — small
+              Most of what I build outside of work is exploratory: small
               tools, AI experiments, things I want to understand by writing
               them. The ones worth showing live here.
             </p>
